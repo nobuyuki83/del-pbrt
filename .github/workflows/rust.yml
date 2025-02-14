@@ -32,8 +32,11 @@ jobs:
           restore-keys: ${{ runner.os }}-cargo-
 
       - name: pull pbrt
-        run: git clone https://github.com/nobuyuki83/pbrt4.git
-
+        run: |
+          set -eux -o pipefail
+          cd ..
+          git clone https://github.com/nobuyuki83/pbrt4.git
+      - uses: actions/checkout@v4
       - name: Check code formatting
         run: cargo fmt --all -- --check
         
@@ -63,6 +66,10 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-cargo-
-          
+      - name: pull pbrt
+        run: |
+          set -eux -o pipefail
+          cd ..
+          git clone https://github.com/nobuyuki83/pbrt4.git
       - name: Build
         run: cargo build --release
