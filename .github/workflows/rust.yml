@@ -31,7 +31,10 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-cargo-
-          
+
+      - name: pull pbrt
+        run: git clone https://github.com/nobuyuki83/pbrt4.git
+
       - name: Check code formatting
         run: cargo fmt --all -- --check
         
