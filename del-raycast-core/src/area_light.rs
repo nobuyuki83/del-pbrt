@@ -11,7 +11,7 @@ pub fn sampling_light(
     vtx2nrm: &[f32],
 ) -> ([f32; 3], [f32; 3]) {
     let (i_tri_light, r1, r2) =
-        del_msh_core::sampling::sample_uniformly_trimesh(tri2cumsumarea, r2[0], r2[1]);
+        del_msh_core::trimesh::sample_uniformly(tri2cumsumarea, r2[0], r2[1]);
     let (p0, p1, p2) = del_msh_core::trimesh3::to_corner_points(tri2vtx, vtx2xyz, i_tri_light);
     let light_pos = del_geo_core::tri3::position_from_barycentric_coords(
         &p0,

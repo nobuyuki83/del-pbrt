@@ -1,0 +1,43 @@
+Integrator "path"
+    "integer maxdepth" [ 65 ]
+Transform [ 0.721367 -0.373123 -0.583445 -0 -0 0.842456 -0.538765 -0 -0.692553 -0.388647 -0.60772 -0 0.0258668 -0.29189 5.43024 1  ]
+Sampler "sobol"
+    "integer pixelsamples" [ 512 ]
+PixelFilter "triangle"
+    "float xradius" [ 1 ]
+    "float yradius" [ 1 ]
+Film "rgb"
+    "string filename" [ "sphere.exr" ]
+    "integer yresolution" [ 360 ]
+    "integer xresolution" [ 640 ]
+Camera "perspective"
+    "float fov" [ 20.114292 ]
+
+WorldBegin
+
+AttributeBegin
+    Transform [ -0.386527 0 0.922278 0 -0.922278 0 -0.386527 0 0 1 0 0 0 0 0 1  ]
+    LightSource "infinite"
+        "string filename" "textures/envmap.pfm"
+AttributeEnd
+
+MakeNamedMaterial "Material"
+    "string type" [ "coateddiffuse" ]
+    "float vroughness" [ 0.001 ]
+    "float uroughness" [ 0.001 ]
+    "bool remaproughness" [ false ]
+    "rgb reflectance" [ 0.243117 0.059106 0.000849 ]
+
+MakeNamedMaterial "Sphere"
+    "string type" [ "dielectric" ]
+    "float eta" [ 1.5 ]
+    "bool remaproughness" [ false ]
+
+AttributeBegin
+    NamedMaterial "Material"
+    AttributeBegin
+        Shape "sphere"
+            "float radius" [ 0.7 ]
+    AttributeEnd
+AttributeEnd
+    
