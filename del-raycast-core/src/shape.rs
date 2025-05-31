@@ -126,7 +126,7 @@ impl ShapeType {
             } => {
                 let tri2cumsum = tri2cumsumarea.as_ref().unwrap();
                 let (i_tri, r0, r1) =
-                    del_msh_core::sampling::sample_uniformly_trimesh(tri2cumsum, rnd[0], rnd[1]);
+                    del_msh_core::trimesh::sample_uniformly(tri2cumsum, rnd[0], rnd[1]);
                 let tri = del_msh_core::trimesh3::to_tri3(tri2vtx, vtx2xyz, i_tri);
                 let pos = tri.position_from_barycentric_coordinates(r0, r1);
                 let unrm = tri.unit_normal();

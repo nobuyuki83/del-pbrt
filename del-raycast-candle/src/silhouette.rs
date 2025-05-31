@@ -294,7 +294,7 @@ fn test_cpu() -> anyhow::Result<()> {
     let img_trg = {
         let transform_ndc2pix = del_geo_core::mat3_col_major::from_transform_ndc2pix(img_shape);
         let mut img_trg = vec![0f32; img_shape.0 * img_shape.1];
-        del_canvas::rasterize::circle::fill::<f32, f32>(
+        del_canvas::rasterize::circle2::fill::<f32, f32>(
             &mut img_trg,
             img_shape.0,
             &[0.0, 0.0],

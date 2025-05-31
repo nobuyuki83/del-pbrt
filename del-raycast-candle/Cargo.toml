@@ -15,13 +15,14 @@ rand.workspace = true
 anyhow.workspace = true
 arrayref.workspace = true
 rayon.workspace = true
+candle-core.workspace = true
+#
 del-geo-core.workspace = true
 del-canvas.workspace = true
 del-msh-core.workspace = true
 del-fem-ls.workspace = true
 del-fem-core.workspace = true
 del-fem-candle.workspace = true
-candle-core.workspace = true
 del-msh-candle.workspace = true
 
 # for develop/push

@@ -38,7 +38,7 @@ fn write_silhouette_on_magnified_image(
                 .unwrap()
                 .xy();
             use slice_of_array::SliceNestExt;
-            del_canvas::rasterize::line::draw_dda(
+            del_canvas::rasterize::line2::draw_dda_pixel_coordinate(
                 img_hires.nest_mut(),
                 img_shape_hires.0,
                 &q0,

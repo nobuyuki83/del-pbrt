@@ -86,7 +86,7 @@ fn main() -> anyhow::Result<()> {
             .unwrap();
         let r1 = del_geo_core::mat4_col_major::transform_homogeneous(&transform_world2ndc, p1.p)
             .unwrap();
-        del_canvas::rasterize::line::draw_dda_with_transformation(
+        del_canvas::rasterize::line2::draw_dda(
             &mut img_data,
             img_shape.0,
             &[r0[0], r0[1]],

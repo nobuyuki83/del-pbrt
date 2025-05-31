@@ -7,7 +7,7 @@ license.workspace = true
 [features]
 cuda = [
     "dep:del-msh-cudarc",
-    "dep:del-cudarc",
+    "dep:del-cudarc-safe",
     "dep:del-raycast-cudarc-kernel"]
 
 [dependencies]
@@ -23,6 +23,6 @@ del-raycast-cudarc-kernel = { workspace = true, optional = true }
 # del-cudarc = {path="../../del-cudarc", optional = true}
 
 # for push
-del-cudarc = {git="https://github.com/nobuyuki83/del-cudarc.git", optional = true}
+del-cudarc-safe = {git="https://github.com/nobuyuki83/del-cudarc.git", optional = true}
 
 
