@@ -1,4 +1,4 @@
-use del_msh_core::search_bvh3::TriMeshWithBvh;
+use del_msh_cpu::search_bvh3::TriMeshWithBvh;
 use del_raycast_core::{
     parse_pbrt,
     textures::{CheckerBoardTexture, Texture},
@@ -29,7 +29,7 @@ fn intersect_bvh(
         let ray_org = del_geo_core::mat4_col_major::transform_homogeneous(&ti, ray_org).unwrap();
         let ray_dir = del_geo_core::mat4_col_major::transform_direction(&ti, ray_dir);
 
-        let Some((t, i_tri)) = del_msh_core::search_bvh3::first_intersection_ray(
+        let Some((t, i_tri)) = del_msh_cpu::search_bvh3::first_intersection_ray(
             &ray_org,
             &ray_dir,
             &TriMeshWithBvh {
@@ -107,8 +107,8 @@ fn parse() -> anyhow::Result<(
         let (_, _, tri2vtx, vtx2xyz, _, uvs) =
             del_raycast_core::parse_pbrt::trimesh3_from_shape_entity(shape_entity, path_file)
                 .unwrap();
-        let bvhnodes = del_msh_core::bvhnodes_morton::from_triangle_mesh(&tri2vtx, &vtx2xyz, 3);
-        let bvhnode2aabb = del_msh_core::bvhnode2aabb3::from_uniform_mesh_with_bvh(
+        let bvhnodes = del_msh_cpu::bvhnodes_morton::from_triangle_mesh(&tri2vtx, &vtx2xyz, 3);
+        let bvhnode2aabb = del_msh_cpu::bvhnode2aabb3::from_uniform_mesh_with_bvh(
             0,
             &bvhnodes,
             Some((&tri2vtx, 3)),
@@ -140,8 +140,8 @@ fn main() -> anyhow::Result<()> {
                 &trimesh.transform,
             );
             let trimesh_vtx2xyz =
-                del_msh_core::vtx2xyz::transform_homogeneous(&trimesh.vtx2xyz, &t);
-            del_msh_core::uniform_mesh::merge(
+                del_msh_cpu::vtx2xyz::transform_homogeneous(&trimesh.vtx2xyz, &t);
+            del_msh_cpu::uniform_mesh::merge(
                 &mut tri2vtx,
                 &mut vtx2xyz,
                 &trimesh.tri2vtx,
@@ -149,7 +149,7 @@ fn main() -> anyhow::Result<()> {
                 3,
             );
         }
-        del_msh_core::io_obj::save_tri2vtx_vtx2xyz(
+        del_msh_cpu::io_obj::save_tri2vtx_vtx2xyz(
             "target/03_material_test_ball.obj",
             &tri2vtx,
             &vtx2xyz,

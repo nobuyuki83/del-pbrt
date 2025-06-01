@@ -13,7 +13,7 @@ cuda = [
 [dependencies]
 arrayref.workspace = true
 anyhow.workspace = true
-del-msh-core.workspace = true
+del-msh-cpu.workspace = true
 del-geo-core.workspace = true
 del-canvas.workspace = true
 del-msh-cudarc = { workspace = true, optional = true }

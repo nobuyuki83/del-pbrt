@@ -59,7 +59,7 @@ del-raycast-cudarc-kernel = {  path = "del-raycast-cudarc-kernel" }
 # candle-core = { git="https://github.com/huggingface/candle.git", version = "=0.8.4"}
 candle-core = "=0.9.0"
 del-geo-core = { git = "https://github.com/nobuyuki83/del-geo.git"}
-del-msh-core = { git = "https://github.com/nobuyuki83/del-msh.git" }
+del-msh-cpu = { git = "https://github.com/nobuyuki83/del-msh.git" }
 del-msh-cudarc = { git = "https://github.com/nobuyuki83/del-msh.git" }
 del-msh-candle = { git = "https://github.com/nobuyuki83/del-msh.git" }
 del-fem-ls = {git="https://github.com/nobuyuki83/del-fem.git"}

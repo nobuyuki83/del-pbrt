@@ -27,7 +27,7 @@ fn radiance(ray: &Ray, vtx2xyz: &[f64], _rng: &mut rand::rngs::ThreadRng) -> [f6
         }
     }
     {
-        let hd = del_msh_core::polyloop3::winding_number(
+        let hd = del_msh_cpu::polyloop3::winding_number(
             vtx2xyz,
             ray.o.as_slice().try_into().unwrap(),
             ray.d.as_slice().try_into().unwrap(),

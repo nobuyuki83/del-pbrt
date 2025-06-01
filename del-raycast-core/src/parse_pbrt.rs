@@ -309,7 +309,7 @@ pub fn parse_shapes(scene: &pbrt4::Scene) -> Vec<ShapeEntity> {
                 let vtx2xyz = positions.clone();
                 let tri2cumsumarea = if shape_entity.area_light_index.is_some() {
                     let tri2cumsumarea =
-                        del_msh_core::trimesh::tri2cumsumarea(&tri2vtx, &vtx2xyz, 3);
+                        del_msh_cpu::trimesh::tri2cumsumarea(&tri2vtx, &vtx2xyz, 3);
                     Some(tri2cumsumarea)
                 } else {
                     None

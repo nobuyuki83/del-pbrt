@@ -1,12 +1,12 @@
 fn main() -> anyhow::Result<()> {
     let (tri2vtx, vtx2xyz) = {
-        let mut obj = del_msh_core::io_obj::WavefrontObj::<usize, f32>::new();
+        let mut obj = del_msh_cpu::io_obj::WavefrontObj::<usize, f32>::new();
         obj.load("asset/spot/spot_triangulated.obj")?;
         (obj.idx2vtx_xyz, obj.vtx2xyz)
     };
-    // let (tri2vtx, vtx2xyz) = del_msh_core::trimesh3_primitive::sphere_yup(0.8, 64, 64);
-    let bvhnodes = del_msh_core::bvhnodes_morton::from_triangle_mesh(&tri2vtx, &vtx2xyz, 3);
-    let bvhnode2aabb = del_msh_core::bvhnode2aabb3::from_uniform_mesh_with_bvh(
+    // let (tri2vtx, vtx2xyz) = del_msh_cpu::trimesh3_primitive::sphere_yup(0.8, 64, 64);
+    let bvhnodes = del_msh_cpu::bvhnodes_morton::from_triangle_mesh(&tri2vtx, &vtx2xyz, 3);
+    let bvhnode2aabb = del_msh_cpu::bvhnode2aabb3::from_uniform_mesh_with_bvh(
         0,
         &bvhnodes,
         Some((&tri2vtx, 3)),
@@ -32,14 +32,14 @@ fn main() -> anyhow::Result<()> {
     dbg!(&transform_world2ndc);
     let edge2vtx_silhouette = {
         let edge2vtx =
-            del_msh_core::edge2vtx::from_triangle_mesh(tri2vtx.as_slice(), vtx2xyz.len() / 3);
-        let edge2tri = del_msh_core::edge2elem::from_edge2vtx_of_tri2vtx(
+            del_msh_cpu::edge2vtx::from_triangle_mesh(tri2vtx.as_slice(), vtx2xyz.len() / 3);
+        let edge2tri = del_msh_cpu::edge2elem::from_edge2vtx_of_tri2vtx(
             &edge2vtx,
             &tri2vtx,
             vtx2xyz.len() / 3,
         );
-        del_msh_core::edge2vtx::silhouette_for_triangle_mesh(
-            //del_msh_core::edge2vtx::occluding_contour_for_triangle_mesh(
+        del_msh_cpu::edge2vtx::silhouette_for_triangle_mesh(
+            //del_msh_cpu::edge2vtx::occluding_contour_for_triangle_mesh(
             &tri2vtx,
             &vtx2xyz,
             &transform_world2ndc,
@@ -80,8 +80,8 @@ fn main() -> anyhow::Result<()> {
     }
     for node2edge in edge2vtx_silhouette.chunks(2) {
         let (i0_vtx, i1_vtx) = (node2edge[0], node2edge[1]);
-        let p0 = del_msh_core::vtx2xyz::to_xyz(&vtx2xyz, i0_vtx);
-        let p1 = del_msh_core::vtx2xyz::to_xyz(&vtx2xyz, i1_vtx);
+        let p0 = del_msh_cpu::vtx2xyz::to_xyz(&vtx2xyz, i0_vtx);
+        let p1 = del_msh_cpu::vtx2xyz::to_xyz(&vtx2xyz, i1_vtx);
         let r0 = del_geo_core::mat4_col_major::transform_homogeneous(&transform_world2ndc, p0.p)
             .unwrap();
         let r1 = del_geo_core::mat4_col_major::transform_homogeneous(&transform_world2ndc, p1.p)

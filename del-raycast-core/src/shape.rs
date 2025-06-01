@@ -126,8 +126,8 @@ impl ShapeType {
             } => {
                 let tri2cumsum = tri2cumsumarea.as_ref().unwrap();
                 let (i_tri, r0, r1) =
-                    del_msh_core::trimesh::sample_uniformly(tri2cumsum, rnd[0], rnd[1]);
-                let tri = del_msh_core::trimesh3::to_tri3(tri2vtx, vtx2xyz, i_tri);
+                    del_msh_cpu::trimesh::sample_uniformly(tri2cumsum, rnd[0], rnd[1]);
+                let tri = del_msh_cpu::trimesh3::to_tri3(tri2vtx, vtx2xyz, i_tri);
                 let pos = tri.position_from_barycentric_coordinates(r0, r1);
                 let unrm = tri.unit_normal();
                 let pdf = 1.0 / tri2cumsum.last().unwrap();
@@ -146,7 +146,7 @@ impl ShapeType {
         match self {
             ShapeType::TriangleMesh {
                 tri2vtx, vtx2xyz, ..
-            } => del_msh_core::trimesh3::cog_and_area(tri2vtx, vtx2xyz).unwrap(),
+            } => del_msh_cpu::trimesh3::cog_and_area(tri2vtx, vtx2xyz).unwrap(),
             ShapeType::Sphere { radius } => ([0f32; 3], del_geo_core::sphere::area(*radius)),
         }
     }
@@ -174,7 +174,7 @@ pub fn intersection_ray_against_shape_entities(
                 tri2vtx, vtx2xyz, ..
             } => {
                 if let Some((t, i_tri)) =
-                    del_msh_core::trimesh3_search_bruteforce::first_intersection_ray(
+                    del_msh_cpu::trimesh3_search_bruteforce::first_intersection_ray(
                         &ray_org_objlcl,
                         &ray_dir_objlcl,
                         tri2vtx,
@@ -219,7 +219,7 @@ pub fn normal_at(se: &ShapeEntity, hit_pos_world: &[f32; 3], i_elem: usize) -> [
     let hit_nrm_objlcl = match &se.shape {
         ShapeType::TriangleMesh {
             tri2vtx, vtx2xyz, ..
-        } => del_msh_core::trimesh3::to_tri3(tri2vtx, vtx2xyz, i_elem).normal(),
+        } => del_msh_cpu::trimesh3::to_tri3(tri2vtx, vtx2xyz, i_elem).normal(),
         ShapeType::Sphere { radius: _ } => hit_pos_objlcl.to_owned(),
     };
     let hit_nrm_world =
@@ -244,21 +244,21 @@ pub fn write_wavefront_obj_file_from_camera_view(
                 } => (tri2vtx.to_owned(), vtx2xyz.to_owned()),
                 ShapeType::Sphere { radius } => {
                     let (tri2vtx, vtx2xyz) =
-                        del_msh_core::trimesh3_primitive::sphere_yup::<usize, f32>(*radius, 32, 32);
+                        del_msh_cpu::trimesh3_primitive::sphere_yup::<usize, f32>(*radius, 32, 32);
                     (tri2vtx, vtx2xyz)
                 }
             };
-            let vtx2xyz_world = del_msh_core::vtx2xyz::transform_homogeneous(
+            let vtx2xyz_world = del_msh_cpu::vtx2xyz::transform_homogeneous(
                 &vtx2xyz_objlcl,
                 &shape_entity.transform_objlcl2world,
             );
-            let vtx2xyz_camlcl = del_msh_core::vtx2xyz::transform_homogeneous(
+            let vtx2xyz_camlcl = del_msh_cpu::vtx2xyz::transform_homogeneous(
                 &vtx2xyz_world,
                 transform_world2camlcl,
             );
             (tri2vtx, vtx2xyz_camlcl)
         };
-        del_msh_core::uniform_mesh::merge(
+        del_msh_cpu::uniform_mesh::merge(
             &mut tri2vtx_out,
             &mut vtx2xyz_out,
             &tri2vtx,
@@ -266,7 +266,7 @@ pub fn write_wavefront_obj_file_from_camera_view(
             3,
         );
     }
-    del_msh_core::io_obj::save_tri2vtx_vtx2xyz(file_name, &tri2vtx_out, &vtx2xyz_out, 3)?;
+    del_msh_cpu::io_obj::save_tri2vtx_vtx2xyz(file_name, &tri2vtx_out, &vtx2xyz_out, 3)?;
     Ok(())
 }
 

@@ -62,11 +62,11 @@ pub fn update_image(
     for node2vtx in edge2vtx_contour.chunks(2) {
         use del_geo_core::vec3::Vec3;
         let (i0_vtx, i1_vtx) = (node2vtx[0], node2vtx[1]);
-        let q0 = del_msh_core::vtx2xyz::to_vec3(vtx2xyz, i0_vtx as usize)
+        let q0 = del_msh_cpu::vtx2xyz::to_vec3(vtx2xyz, i0_vtx as usize)
             .transform_homogeneous(transform_world2pix)
             .unwrap()
             .xy();
-        let q1 = del_msh_core::vtx2xyz::to_vec3(vtx2xyz, i1_vtx as usize)
+        let q1 = del_msh_cpu::vtx2xyz::to_vec3(vtx2xyz, i1_vtx as usize)
             .transform_homogeneous(transform_world2pix)
             .unwrap()
             .xy();
@@ -109,8 +109,8 @@ pub fn backward_wrt_vtx2xyz(
     for node2vtx in edge2vtx_contour.chunks(2) {
         use del_geo_core::vec3::Vec3;
         let (i0_vtx, i1_vtx) = (node2vtx[0], node2vtx[1]);
-        let p0 = del_msh_core::vtx2xyz::to_xyz(vtx2xyz, i0_vtx as usize).p;
-        let p1 = del_msh_core::vtx2xyz::to_xyz(vtx2xyz, i1_vtx as usize).p;
+        let p0 = del_msh_cpu::vtx2xyz::to_xyz(vtx2xyz, i0_vtx as usize).p;
+        let p1 = del_msh_cpu::vtx2xyz::to_xyz(vtx2xyz, i1_vtx as usize).p;
         let q0 = p0.transform_homogeneous(transform_world2pix).unwrap().xy();
         let q1 = p1.transform_homogeneous(transform_world2pix).unwrap().xy();
         let v01 = del_geo_core::vec2::sub(&q1, &q0);

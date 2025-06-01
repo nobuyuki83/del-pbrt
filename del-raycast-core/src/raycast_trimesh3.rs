@@ -19,10 +19,10 @@ pub fn update_pix2tri<Index>(
         //
         let (ray_org, ray_dir) =
             crate::cam3::ray3_homogeneous((i_w, i_h), img_shape, transform_ndc2world);
-        if let Some((_t, i_tri)) = del_msh_core::search_bvh3::first_intersection_ray(
+        if let Some((_t, i_tri)) = del_msh_cpu::search_bvh3::first_intersection_ray(
             &ray_org,
             &ray_dir,
-            &del_msh_core::search_bvh3::TriMeshWithBvh {
+            &del_msh_cpu::search_bvh3::TriMeshWithBvh {
                 tri2vtx,
                 vtx2xyz,
                 bvhnodes,
@@ -65,11 +65,11 @@ pub fn render_depth_bvh(
             let (ray_org, ray_dir) =
                 crate::cam3::ray3_homogeneous((iw, ih), image_size, transform_ndc2world);
             let mut hits = vec![];
-            del_msh_core::search_bvh3::intersections_ray(
+            del_msh_cpu::search_bvh3::intersections_ray(
                 &mut hits,
                 &ray_org,
                 &ray_dir,
-                &del_msh_core::search_bvh3::TriMeshWithBvh {
+                &del_msh_cpu::search_bvh3::TriMeshWithBvh {
                     tri2vtx,
                     vtx2xyz,
                     bvhnodes,
@@ -109,7 +109,7 @@ where
                 continue;
             }
             let i_tri: usize = i_tri.as_();
-            let tri = del_msh_core::trimesh3::to_tri3(tri2vtx, vtx2xyz, i_tri);
+            let tri = del_msh_cpu::trimesh3::to_tri3(tri2vtx, vtx2xyz, i_tri);
             let nrm = tri.normal();
             let nrm = del_geo_core::mat4_col_major::transform_direction(cam_modelviewd, &nrm);
             let unrm = del_geo_core::vec3::normalize(&nrm);
@@ -147,7 +147,7 @@ where
                 continue;
             }
             let i_tri: usize = i_tri.as_();
-            let tri = del_msh_core::trimesh3::to_tri3(tri2vtx, vtx2xyz, i_tri);
+            let tri = del_msh_cpu::trimesh3::to_tri3(tri2vtx, vtx2xyz, i_tri);
             let Some(a) = tri.intersection_against_ray(&ray_org, &ray_dir) else {
                 continue;
             };

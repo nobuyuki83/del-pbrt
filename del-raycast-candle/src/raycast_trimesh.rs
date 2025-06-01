@@ -41,7 +41,7 @@ pub fn raycast2(
             )
             .unwrap();
             let mut res: Vec<(u32, f32, f32)> = vec![];
-            del_msh_core::search_bvh2::including_point::<f32, u32>(
+            del_msh_cpu::search_bvh2::including_point::<f32, u32>(
                 &mut res, tri2vtx, vtx2xy, &p_xy, 0, bvhnodes, aabbs,
             );
             let Some(&(i_tri, _r0, _r1)) = res.first() else {

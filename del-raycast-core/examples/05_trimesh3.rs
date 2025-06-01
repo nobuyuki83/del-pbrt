@@ -1,6 +1,6 @@
 fn main() -> anyhow::Result<()> {
     let (tri2vtx, vtx2xyz, vtx2uv) = {
-        let mut obj = del_msh_core::io_obj::WavefrontObj::<usize, f32>::new();
+        let mut obj = del_msh_cpu::io_obj::WavefrontObj::<usize, f32>::new();
         obj.load("asset/spot/spot_triangulated.obj")?;
         obj.unified_xyz_uv_as_trimesh()
     };
@@ -23,12 +23,12 @@ fn main() -> anyhow::Result<()> {
         del_geo_core::mat4_col_major::try_inverse(&transform_world2ndc).unwrap();
     /*
     {
-        let vtx2xyz2 = del_msh_core::vtx2xyz::transform(&vtx2xyz, &transform_world2ndc);
-        del_msh_core::io_obj::save_tri2vtx_vtx2xyz("target/hoge.obj", &tri2vtx, &vtx2xyz2, 3);
+        let vtx2xyz2 = del_msh_cpu::vtx2xyz::transform(&vtx2xyz, &transform_world2ndc);
+        del_msh_cpu::io_obj::save_tri2vtx_vtx2xyz("target/hoge.obj", &tri2vtx, &vtx2xyz2, 3);
     }
      */
-    let bvhnodes = del_msh_core::bvhnodes_morton::from_triangle_mesh(&tri2vtx, &vtx2xyz, 3);
-    let aabbs = del_msh_core::bvhnode2aabb3::from_uniform_mesh_with_bvh(
+    let bvhnodes = del_msh_cpu::bvhnodes_morton::from_triangle_mesh(&tri2vtx, &vtx2xyz, 3);
+    let aabbs = del_msh_cpu::bvhnode2aabb3::from_uniform_mesh_with_bvh(
         0,
         &bvhnodes,
         Some((&tri2vtx, 3)),

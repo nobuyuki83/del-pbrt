@@ -247,15 +247,15 @@ impl candle_core::CustomOp1 for AntiAliasSilhouette {
 fn test_cpu() -> anyhow::Result<()> {
     let (tri2vtx, vtx2xyz, vtx2idx, idx2vtx, edge2vtx, edge2tri) = {
         let (tri2vtx, vtx2xyz) =
-            del_msh_core::trimesh3_primitive::sphere_yup::<u32, f32>(0.5, 64, 64);
+            del_msh_cpu::trimesh3_primitive::sphere_yup::<u32, f32>(0.5, 64, 64);
         let num_vtx = vtx2xyz.len() / 3;
         let (vtx2idx, idx2vtx) =
-            del_msh_core::vtx2vtx::from_uniform_mesh(&tri2vtx, 3, num_vtx, false);
-        let edge2vtx = del_msh_core::edge2vtx::from_triangle_mesh(&tri2vtx, num_vtx);
+            del_msh_cpu::vtx2vtx::from_uniform_mesh(&tri2vtx, 3, num_vtx, false);
+        let edge2vtx = del_msh_cpu::edge2vtx::from_triangle_mesh(&tri2vtx, num_vtx);
         let num_tri = tri2vtx.len() / 3;
         let num_edge = edge2vtx.len() / 2;
         let edge2tri =
-            del_msh_core::edge2elem::from_edge2vtx_of_tri2vtx(&edge2vtx, &tri2vtx, num_vtx);
+            del_msh_cpu::edge2elem::from_edge2vtx_of_tri2vtx(&edge2vtx, &tri2vtx, num_vtx);
         //
         let vtx2idx = Tensor::from_vec(vtx2idx, num_vtx + 1, &Device::Cpu)?;
         let num_idx = idx2vtx.len();
@@ -348,7 +348,7 @@ fn test_cpu() -> anyhow::Result<()> {
             {
                 let vtx2xyz = vtx2xyz.flatten_all()?.to_vec1::<f32>()?;
                 let tri2vtx = tri2vtx.flatten_all()?.to_vec1::<u32>()?;
-                del_msh_core::io_obj::save_tri2vtx_vtx2xyz(
+                del_msh_cpu::io_obj::save_tri2vtx_vtx2xyz(
                     format!("../target/del-raycast-candle__silhouette_{}.obj", iter),
                     &tri2vtx,
                     &vtx2xyz,

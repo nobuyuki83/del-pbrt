@@ -25,7 +25,7 @@ pub fn update_bwd_wrt_vtx2xyz(
             transform_ndc2world,
         );
         let i_tri = i_tri as usize;
-        let (p0, p1, p2) = del_msh_core::trimesh3::to_corner_points(tri2vtx, vtx2xyz, i_tri);
+        let (p0, p1, p2) = del_msh_cpu::trimesh3::to_corner_points(tri2vtx, vtx2xyz, i_tri);
         let dw_depth = {
             let t =
                 del_geo_core::tri3::intersection_against_line(&p0, &p1, &p2, &ray_org, &ray_dir)
@@ -196,7 +196,7 @@ impl candle_core::CustomOp1 for Pix2Depth {
                 img_shape,
                 transform_ndc2world,
             );
-            let tri = del_msh_core::trimesh3::to_tri3(tri2vtx, vtx2xyz, i_tri as usize);
+            let tri = del_msh_cpu::trimesh3::to_tri3(tri2vtx, vtx2xyz, i_tri as usize);
             let coeff = del_geo_core::tri3::intersection_against_line(
                 tri.p0, tri.p1, tri.p2, &ray_org, &ray_dir,
             )
@@ -351,10 +351,10 @@ mod tests {
     #[test]
     fn test_optimize_depth() -> anyhow::Result<()> {
         let (tri2vtx, vtx2xyz) =
-            del_msh_core::trimesh3_primitive::sphere_yup::<u32, f32>(0.8, 32, 32);
+            del_msh_cpu::trimesh3_primitive::sphere_yup::<u32, f32>(0.8, 32, 32);
         let vtx2xyz = {
             let mut vtx2xyz_new = vtx2xyz.clone();
-            del_msh_core::vtx2xyz::translate_then_scale(
+            del_msh_cpu::vtx2xyz::translate_then_scale(
                 &mut vtx2xyz_new,
                 &vtx2xyz,
                 &[0.2, 0.0, 0.0],
@@ -364,7 +364,7 @@ mod tests {
         };
         let num_vtx = vtx2xyz.len() / 3;
         let (vtx2idx, idx2vtx) =
-            del_msh_core::vtx2vtx::from_uniform_mesh(&tri2vtx, 3, num_vtx, false);
+            del_msh_cpu::vtx2vtx::from_uniform_mesh(&tri2vtx, 3, num_vtx, false);
         let num_tri = tri2vtx.len() / 3;
         let tri2vtx = Tensor::from_vec(tri2vtx, (num_tri, 3), &Device::Cpu)?;
         let vtx2xyz = candle_core::Var::from_vec(vtx2xyz, (num_vtx, 3), &Device::Cpu)?;
@@ -556,7 +556,7 @@ mod tests {
             {
                 let vtx2xyz = vtx2xyz.flatten_all()?.to_vec1::<f32>()?;
                 let tri2vtx = tri2vtx.flatten_all()?.to_vec1::<u32>()?;
-                del_msh_core::io_obj::save_tri2vtx_vtx2xyz(
+                del_msh_cpu::io_obj::save_tri2vtx_vtx2xyz(
                     format!("../target/hoge_{}.obj", itr),
                     &tri2vtx,
                     &vtx2xyz,

@@ -17,7 +17,7 @@ glutin-winit.workspace = true
 winit.workspace = true
 #
 # workspace
-del-msh-core.workspace = true
+del-msh-cpu.workspace = true
 del-geo-core.workspace = true
 del-gl-winit-glutin.workspace = true
 del-raycast-core.workspace = true

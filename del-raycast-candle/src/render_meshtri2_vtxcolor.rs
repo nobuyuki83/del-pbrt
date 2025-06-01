@@ -56,7 +56,7 @@ impl candle_core::CustomOp1 for Layer {
                 )
                 .unwrap();
                 let (p0, p1, p2) =
-                    del_msh_core::trimesh2::to_corner_points(tri2vtx, vtx2xy, i_tri as usize);
+                    del_msh_cpu::trimesh2::to_corner_points(tri2vtx, vtx2xy, i_tri as usize);
                 let Some((r0, r1, r2)) =
                     del_geo_core::tri2::barycentric_coords(&p0, &p1, &p2, &p_xy)
                 else {
@@ -131,7 +131,7 @@ impl candle_core::CustomOp1 for Layer {
                 )
                 .unwrap();
                 let (p0, p1, p2) =
-                    del_msh_core::trimesh2::to_corner_points(tri2vtx, vtx2xy, i_tri as usize);
+                    del_msh_cpu::trimesh2::to_corner_points(tri2vtx, vtx2xy, i_tri as usize);
                 let Some((r0, r1, r2)) =
                     del_geo_core::tri2::barycentric_coords(&p0, &p1, &p2, &p_xy)
                 else {
@@ -181,7 +181,7 @@ fn test_optimize_vtxcolor() -> anyhow::Result<()> {
         &img_shape,
         &[0.0, 0.0, 1.0, 1.0],
     );
-    let (tri2vtx, vtx2xyz) = del_msh_core::trimesh2_dynamic::meshing_from_polyloop2::<u32, f32>(
+    let (tri2vtx, vtx2xyz) = del_msh_cpu::trimesh2_dynamic::meshing_from_polyloop2::<u32, f32>(
         &[0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0],
         0.03,
         0.03,
