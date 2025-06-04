@@ -73,7 +73,7 @@ impl MyScene {
         use del_geo_core::vec3;
         let (pos_light, nrm_light, pdf_shape) =
             self.shape_entities[i_shape_entity_light].sample_uniform(&[rng.random(), rng.random()]);
-        let uvec_hit2light = vec3::normalize(&vec3::sub(&pos_light, &pos_observe));
+        let uvec_hit2light = vec3::normalize(&vec3::sub(&pos_light, pos_observe));
         let cos_theta_light = -vec3::dot(&nrm_light, &uvec_hit2light);
         if cos_theta_light < 0. {
             return None;
@@ -86,7 +86,7 @@ impl MyScene {
         ) {
             return None;
         }
-        let r2 = del_geo_core::edge3::squared_length(&pos_light, &pos_observe);
+        let r2 = del_geo_core::edge3::squared_length(&pos_light, pos_observe);
         let geo_term = cos_theta_light / r2;
         let i_area_light = self.shape_entities[i_shape_entity_light]
             .area_light_index
@@ -108,9 +108,9 @@ impl MyScene {
             .area_light_index
             .unwrap();
         let pdf1_obj = 1.0 / self.area_light_geometries[ial].area;
-        let r2 = del_geo_core::edge3::squared_length(&pos_light, &pos_observe);
-        let uvec_hit2light = pos_light.sub(&pos_observe).normalize();
-        let cos_theta_light = -vec3::dot(&nrm_light, &uvec_hit2light);
+        let r2 = del_geo_core::edge3::squared_length(pos_light, pos_observe);
+        let uvec_hit2light = pos_light.sub(pos_observe).normalize();
+        let cos_theta_light = -vec3::dot(nrm_light, &uvec_hit2light);
         if cos_theta_light <= 0. {
             return f32::EPSILON;
         } // backside of light
@@ -232,13 +232,11 @@ impl del_raycast_core::monte_carlo_integrator::Scene for MyScene {
         else {
             return None;
         };
-        let hit_pos_world = del_geo_core::vec3::axpy(t, &ray_dir, &ray_org);
+        let hit_pos_world = del_geo_core::vec3::axpy(t, ray_dir, ray_org);
         let se = &self.shape_entities[i_shape_entity];
         let hit_nrm_world = del_raycast_core::shape::normal_at(se, &hit_pos_world, i_elem);
         let hit_emission = if let Some(ial) = se.area_light_index {
-            self.area_lights[ial]
-                .spectrum_rgb
-                .unwrap_or_else(|| [0f32; 3])
+            self.area_lights[ial].spectrum_rgb.unwrap_or([0f32; 3])
         } else {
             [0f32; 3]
         };
@@ -372,10 +370,10 @@ fn mc_integration(
     del_canvas::write_hdr_file_mse_rgb_error_map(
         path_error_map,
         camera.img_shape,
-        &img_gt,
+        img_gt,
         &img_out,
     )?;
-    let err = del_canvas::rmse_error(&img_gt, &img_out);
+    let err = del_canvas::rmse_error(img_gt, &img_out);
     println!("num_sample: {}, mse: {}", num_sample, err);
     Ok(())
 }

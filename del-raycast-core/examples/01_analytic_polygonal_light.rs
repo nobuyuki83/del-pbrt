@@ -19,11 +19,9 @@ fn radiance(ray: &Ray, vtx2xyz: &[f64], _rng: &mut rand::rngs::ThreadRng) -> [f6
     let mut hit_depth = Option::<f64>::None;
     {
         let hd = del_geo_core::plane::intersection_ray3(&floor.0, &floor.1, &ray.o, &ray.d);
-        if hd.is_some() {
-            if hit_depth.is_none() || Some(hd) < Some(hit_depth) {
-                hit_depth = hd;
-                i_material = 1;
-            }
+        if hd.is_some() && (hit_depth.is_none() || Some(hd) < Some(hit_depth)) {
+            hit_depth = hd;
+            i_material = 1;
         }
     }
     {

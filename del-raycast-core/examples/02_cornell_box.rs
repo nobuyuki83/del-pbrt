@@ -47,7 +47,7 @@ impl MyScene {
         use del_geo_core::vec3;
         let (pos_light, nrm_light, pdf_shape) = self.shape_entities[self.i_shape_entity_light]
             .sample_uniform(&[rng.random(), rng.random()]);
-        let uvec_hit2light = vec3::normalize(&vec3::sub(&pos_light, &pos_observe));
+        let uvec_hit2light = vec3::normalize(&vec3::sub(&pos_light, pos_observe));
         let cos_theta_light = -vec3::dot(&nrm_light, &uvec_hit2light);
         if cos_theta_light < 0. {
             return None;
@@ -64,7 +64,7 @@ impl MyScene {
             .area_light_index
             .unwrap();
         let l_i = self.area_lights[i_area_light].spectrum_rgb.unwrap();
-        let r2 = del_geo_core::edge3::squared_length(&pos_light, &pos_observe);
+        let r2 = del_geo_core::edge3::squared_length(&pos_light, pos_observe);
         let geo_term = cos_theta_light / r2;
         Some((l_i, pdf_shape / geo_term, uvec_hit2light))
     }
@@ -115,7 +115,7 @@ impl del_raycast_core::monte_carlo_integrator::Scene for MyScene {
         else {
             return None;
         };
-        let hit_pos = vec3::axpy(t, &ray_dir, &ray_org);
+        let hit_pos = vec3::axpy(t, ray_dir, ray_org);
         let hit_nrm = del_raycast_core::shape::normal_at(
             &self.shape_entities[i_shape_entity],
             &hit_pos,
@@ -132,7 +132,7 @@ impl del_raycast_core::monte_carlo_integrator::Scene for MyScene {
                 }
             }
         }
-        let hit_nrm = if vec3::dot(&hit_nrm, &ray_dir) > 0. {
+        let hit_nrm = if vec3::dot(&hit_nrm, ray_dir) > 0. {
             [-hit_nrm[0], -hit_nrm[1], -hit_nrm[2]]
         } else {
             hit_nrm
@@ -149,8 +149,8 @@ impl del_raycast_core::monte_carlo_integrator::Scene for MyScene {
         use del_geo_core::vec3;
         let vec_obj2light = vec3::sub(hit_pos_light, hit_pos);
         let uvec_obj2light = vec3::normalize(&vec_obj2light);
-        let distance = del_geo_core::edge3::length(&hit_pos, &hit_pos_light);
-        let geo_term = -del_geo_core::vec3::dot(&uvec_obj2light, &hit_nrm_light) / distance.powi(2);
+        let distance = del_geo_core::edge3::length(hit_pos, hit_pos_light);
+        let geo_term = -del_geo_core::vec3::dot(&uvec_obj2light, hit_nrm_light) / distance.powi(2);
         let se = &self.shape_entities[self.i_shape_entity_light];
         let area = match &se.shape {
             del_raycast_core::shape::ShapeType::TriangleMesh { tri2cumsumarea, .. } => {
@@ -293,10 +293,10 @@ fn render_and_save_image_and_compute_error(
     del_canvas::write_hdr_file_mse_rgb_error_map(
         path_error_map,
         camera.img_shape,
-        &img_gt,
+        img_gt,
         &img_out,
     )?;
-    let err = del_canvas::rmse_error(&img_gt, &img_out);
+    let err = del_canvas::rmse_error(img_gt, &img_out);
     println!("num_sample: {}, mse: {}", num_sample, err);
     Ok(())
 }
