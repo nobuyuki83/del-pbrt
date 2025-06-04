@@ -120,8 +120,7 @@ fn main() -> anyhow::Result<()> {
                     let refl_dir: [f32; 3] = del_raycast_core::sampling::hemisphere_cos_weighted(
                         &[hit_nrm[0], hit_nrm[1], hit_nrm[2]],
                         &[rng.random::<f32>(), rng.random::<f32>()],
-                    )
-                    .into();
+                    );
                     let refl_dir = vec3::normalize(&refl_dir);
                     let env = del_geo_core::mat4_col_major::transform_homogeneous(
                         &transform_env,
