@@ -282,12 +282,12 @@ fn render_and_save_image_and_compute_error(
         img_out
     };
     del_canvas::write_hdr_file(
-        format!("target/02_cornell_box__{}_{}.hdr", str_type, num_sample),
+        format!("target/02_cornell_box__{}_{}.exr", str_type, num_sample),
         camera.img_shape,
         &img_out,
     )?;
     let path_error_map = format!(
-        "target/02_cornell_box__{}_{}_error_map.hdr",
+        "target/02_cornell_box__{}_{}_error_map.exr",
         str_type, num_sample
     );
     del_canvas::write_hdr_file_mse_rgb_error_map(
