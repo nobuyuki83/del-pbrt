@@ -135,7 +135,7 @@ impl ShapeType {
             }
             ShapeType::Sphere { radius } => {
                 let area = del_geo_core::sphere::area(*radius);
-                let nrm = del_geo_core::sphere::sample(rnd);
+                let nrm = del_geo_core::sphere::sample_surface_uniform(rnd);
                 let pos = del_geo_core::vec3::scale(&nrm, *radius);
                 (pos, nrm, 1. / area)
             }
