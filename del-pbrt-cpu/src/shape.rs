@@ -252,10 +252,8 @@ pub fn write_wavefront_obj_file_from_camera_view(
                 &vtx2xyz_objlcl,
                 &shape_entity.transform_objlcl2world,
             );
-            let vtx2xyz_camlcl = del_msh_cpu::vtx2xyz::transform_homogeneous(
-                &vtx2xyz_world,
-                transform_world2camlcl,
-            );
+            let vtx2xyz_camlcl =
+                del_msh_cpu::vtx2xyz::transform_homogeneous(&vtx2xyz_world, transform_world2camlcl);
             (tri2vtx, vtx2xyz_camlcl)
         };
         del_msh_cpu::uniform_mesh::merge(

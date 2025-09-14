@@ -139,8 +139,7 @@ fn main() -> anyhow::Result<()> {
                 &camera.transform_world2camlcl,
                 &trimesh.transform,
             );
-            let trimesh_vtx2xyz =
-                del_msh_cpu::vtx2xyz::transform_homogeneous(&trimesh.vtx2xyz, &t);
+            let trimesh_vtx2xyz = del_msh_cpu::vtx2xyz::transform_homogeneous(&trimesh.vtx2xyz, &t);
             del_msh_cpu::uniform_mesh::merge(
                 &mut tri2vtx,
                 &mut vtx2xyz,
