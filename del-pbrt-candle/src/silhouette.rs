@@ -341,7 +341,7 @@ fn test_cpu() -> anyhow::Result<()> {
         };
         if iter % 10 == 0 {
             del_canvas::write_png_from_float_image_grayscale(
-                format!("../target/del-raycast-candle__silhouette_{}.png", iter),
+                format!("../target/del-pbrt-candle__silhouette_{}.png", iter),
                 img_shape,
                 &img.flatten_all()?.to_vec1::<f32>()?,
             )?;
@@ -349,7 +349,7 @@ fn test_cpu() -> anyhow::Result<()> {
                 let vtx2xyz = vtx2xyz.flatten_all()?.to_vec1::<f32>()?;
                 let tri2vtx = tri2vtx.flatten_all()?.to_vec1::<u32>()?;
                 del_msh_cpu::io_obj::save_tri2vtx_vtx2xyz(
-                    format!("../target/del-raycast-candle__silhouette_{}.obj", iter),
+                    format!("../target/del-pbrt-candle__silhouette_{}.obj", iter),
                     &tri2vtx,
                     &vtx2xyz,
                     3,
@@ -419,7 +419,7 @@ fn test_cpu() -> anyhow::Result<()> {
             let img = vtx2xyz.apply_op1(layer_silhouette)?;
             let img_gpu = img.flatten_all()?.to_vec1::<f32>()?;
             del_canvas::write_png_from_float_image_grayscale(
-                "../target/del-raycast-candle__silhouette_cuda.png",
+                "../target/del-pbrt-candle__silhouette_cuda.png",
                 img_shape,
                 &img_gpu,
             )?;

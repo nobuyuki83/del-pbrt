@@ -1,11 +1,11 @@
 [workspace]
 members = [
-    "del-raycast-core",
-    "del-raycast-cudarc",
-    "del-raycast-candle",
+    "del-pbrt-cpu",
+    "del-pbrt-cudarc",
+    "del-pbrt-candle",
     "examples",
 ]
-exclude = ["del-raycast-cudarc-kernel"]
+exclude = ["del-pbrt-cuda-kernel"]
 resolver = "2"
 
 [workspace.package]
@@ -36,9 +36,9 @@ gl_generator = "0.14"
 cfg_aliases = "0.2.1"
 
 # internal
-del-raycast-core = {  path = "del-raycast-core" }
-del-raycast-cudarc = {  path = "del-raycast-cudarc" }
-del-raycast-cudarc-kernel = {  path = "del-raycast-cudarc-kernel" }
+del-raycast-core = {  path = "del-pbrt-cpu" }
+del-raycast-cudarc = {  path = "del-pbrt-cudarc" }
+del-raycast-cudarc-kernel = {  path = "del-pbrt-cuda-kernel" }
 
 # for development
 # del-geo-core = { path = "../del-geo/del-geo-core" }
