@@ -7,7 +7,7 @@ PixelFilter "triangle"
     "float xradius" [ 1 ]
     "float yradius" [ 1 ]
 Film "rgb"
-    "string filename" [ "material-testball.png" ]
+    "string filename" [ "material-testball.exr" ]
     "integer yresolution" [ 720 ]
     "integer xresolution" [ 1280 ]
 Camera "perspective"

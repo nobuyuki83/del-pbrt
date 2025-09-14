@@ -7,7 +7,7 @@ PixelFilter "triangle"
     "float xradius" [ 1 ]
     "float yradius" [ 1 ]
 Film "rgb"
-    "string filename" [ "cornell-box.png" ]
+    "string filename" [ "cornell-box.exr" ]
     "integer yresolution" [ 1024 ]
     "integer xresolution" [ 1024 ]
 Camera "perspective"
