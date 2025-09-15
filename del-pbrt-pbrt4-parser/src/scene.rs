@@ -111,7 +111,7 @@ impl Scene {
     /// # Arguments
     /// - `data` is a string buffer with the file data.
     /// - `working_directory` is a file's directory path which required for includes
-    ///     with relative paths to work.
+    ///   with relative paths to work.
     pub fn load(data: &str, working_directory: Option<&Path>) -> Result<Scene> {
         let mut scene = Scene::default();
 
