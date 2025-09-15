@@ -1,5 +1,5 @@
 [package]
-name = "del-raycast-core"
+name = "del-pbrt-cpu"
 version.workspace = true
 edition.workspace = true
 

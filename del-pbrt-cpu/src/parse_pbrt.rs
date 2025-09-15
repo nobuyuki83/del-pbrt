@@ -255,9 +255,10 @@ pub fn parse_material(scene: &pbrt4::Scene) -> Vec<crate::material::Material> {
                 };
                 materials.push(crate::material::Material::CoaDiff(coadiff))
             }
+            "" => materials.push(crate::material::Material::None),
             _ => {
                 dbg!(&mat.attributes);
-                panic!("Material paser not support");
+                panic!("Material parser not support");
             }
         }
     }

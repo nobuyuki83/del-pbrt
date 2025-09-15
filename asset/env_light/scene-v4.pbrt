@@ -1,0 +1,34 @@
+Integrator "path"
+    "integer maxdepth" [ 65 ]
+Transform [ 0.721367 -0.373123 -0.583445 -0 -0 0.842456 -0.538765 -0 -0.692553 -0.388647 -0.60772 -0 0.0258668 -0.29189 5.43024 1  ]
+Sampler "sobol"
+    "integer pixelsamples" [ 64 ]
+PixelFilter "triangle"
+    "float xradius" [ 1 ]
+    "float yradius" [ 1 ]
+Film "rgb"
+    "string filename" [ "env-light.exr" ]
+    "integer yresolution" [ 360 ]
+    "integer xresolution" [ 640 ]
+Camera "perspective"
+    "float fov" [ 20.114292 ]
+
+
+WorldBegin
+
+AttributeBegin
+    Transform [ -0.386527 0 0.922278 0 -0.922278 0 -0.386527 0 0 1 0 0 0 0 0 1  ]
+    LightSource "infinite"
+        "string filename" "textures/envmap.pfm"
+AttributeEnd
+AttributeBegin
+    #Material "diffuse" 
+    #    "rgb reflectance" [1.0 1.0 1.0]
+    Material "conductor" 
+        "rgb eta" [100 100 100]
+        "rgb k"   [0 0 0]
+        "float roughness" [0.0]
+        "bool remaproughness" [true]
+    Translate 0.15 0.50 0.16
+    Shape "sphere" "float radius" [0.7]
+AttributeEnd

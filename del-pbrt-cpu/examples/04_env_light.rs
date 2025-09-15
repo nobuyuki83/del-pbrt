@@ -1,10 +1,37 @@
-use arrayref::array_mut_ref;
+struct MyScene {
+    sphere_rad: f32,
+    sphere_cntr: [f32; 3],
+    materials: Vec<del_pbrt_cpu::material::Material>,
+}
+
+fn parse_pbrt_file(file_path: &str) -> anyhow::Result<(MyScene, del_pbrt_cpu::parse_pbrt::Camera)> {
+    let scene = pbrt4::Scene::from_file(file_path)?;
+    let camera = del_pbrt_cpu::parse_pbrt::camera(&scene);
+    let materials = del_pbrt_cpu::parse_pbrt::parse_material(&scene);
+    let shape_entities = del_pbrt_cpu::parse_pbrt::parse_shapes(&scene);
+    //
+    // Get the area light source
+    let rad = match shape_entities[0].shape {
+        del_pbrt_cpu::shape::ShapeType::Sphere { radius: rad } => rad,
+        _ => panic!(),
+    };
+    let sphere_cntr = del_geo_core::mat4_col_major::to_vec3_translation(
+        &shape_entities[0].transform_objlcl2world,
+    );
+    let scene = MyScene {
+        sphere_rad: rad,
+        sphere_cntr,
+        materials,
+    };
+    Ok((scene, camera))
+}
 
 fn main() -> anyhow::Result<()> {
+    let pbrt_file_path = "asset/env_light/scene-v4.pbrt";
+    let (scene, camera) = parse_pbrt_file(pbrt_file_path)?;
     let (tex_shape, tex_data) = {
-        let pfm = del_raycast_core::io_pfm::PFM::read_from(
-            "asset/material-testball/textures/envmap.pfm",
-        )?;
+        let pfm =
+            del_pbrt_cpu::io_pfm::PFM::read_from("asset/material-testball/textures/envmap.pfm")?;
         ((pfm.w, pfm.h), pfm.data)
     };
     {
@@ -14,45 +41,38 @@ fn main() -> anyhow::Result<()> {
             .map(|rgb| *image::Rgb::<f32>::from_slice(rgb))
             .collect();
         use image::codecs::hdr::HdrEncoder;
-        let file = std::fs::File::create("target/04_env_light_pfm.hdr").unwrap();
+        let file = std::fs::File::create("target/04_env_light_pfm.exr").unwrap();
         let enc = HdrEncoder::new(file);
         let _ = enc.encode(&img, tex_shape.0, tex_shape.1);
     }
     // --------------------
-    let camera_fov = 20.0;
-    // let transform_cam_lcl2glbl = del_geo_core::mat4_col_major::from_translate(&[0., 0., -5.]);
-    let transform_world2camlcl: [f32; 16] = [
-        0.721367, -0.373123, -0.583445, -0., -0., 0.842456, -0.538765, -0., -0.692553, -0.388647,
-        -0.60772, -0., 0.0258668, -0.29189, 5.43024, 1.,
-    ];
-    let transform_camlcl2world =
-        del_geo_core::mat4_col_major::try_inverse(&transform_world2camlcl).unwrap();
     let transform_env = [
         -0.386527, 0., 0.922278, 0., -0.922278, 0., -0.386527, 0., 0., 1., 0., 0., 0., 0., 0., 1.,
     ];
-    let transform_env: [f32; 16] = {
-        let m = nalgebra::Matrix4::<f32>::from_column_slice(&transform_env);
-        let m = m.try_inverse().unwrap();
-        // let transform_env = del_geo_core::mat4_col_major::try_inverse(&transform_env).unwrap();
-        m.as_slice().try_into().unwrap()
-    };
-    let sphere_cntr = [0.15, 0.50, 0.16];
+    let transform_env =
+        del_geo_core::mat4_col_major::try_inverse_with_pivot(&transform_env).unwrap();
     let img_shape = (640, 360);
     {
+        // mirror reflection
         let shoot_ray = |i_pix: usize, pix: &mut [f32]| {
-            let pix = array_mut_ref![pix, 0, 3];
-            let (ray_org, ray_dir) = del_raycast_core::cam_pbrt::cast_ray_plus_z(
+            let pix = arrayref::array_mut_ref![pix, 0, 3];
+            let (ray_org, ray_dir) = del_pbrt_cpu::cam_pbrt::cast_ray_plus_z(
                 (i_pix % img_shape.0, i_pix / img_shape.0),
                 (0., 0.),
                 img_shape,
-                camera_fov,
-                transform_camlcl2world,
+                camera.camera_fov,
+                camera.transform_camlcl2world,
             );
-            let t = del_geo_core::sphere::intersection_ray(0.7, &sphere_cntr, &ray_org, &ray_dir);
+            let t = del_geo_core::sphere::intersection_ray(
+                scene.sphere_rad,
+                &scene.sphere_cntr,
+                &ray_org,
+                &ray_dir,
+            );
             if let Some(t) = t {
                 use del_geo_core::vec3;
                 let pos = vec3::axpy::<f32>(t, &ray_dir, &ray_org);
-                let nrm = vec3::sub(&pos, &sphere_cntr);
+                let nrm = vec3::sub(&pos, &scene.sphere_cntr);
                 let hit_nrm = vec3::normalize(&nrm);
                 let refl = vec3::mirror_reflection(&ray_dir, &hit_nrm);
                 let refl = vec3::normalize(&refl);
@@ -60,26 +80,30 @@ fn main() -> anyhow::Result<()> {
                     del_geo_core::mat4_col_major::transform_homogeneous(&transform_env, &refl)
                         .unwrap();
                 let tex_coord = del_geo_core::uvec3::map_to_unit2_equal_area(&env);
-                *pix = del_canvas::texture::nearest_integer_center::<3>(
+                *pix = del_canvas::image_interpolation::nearest::<3>(
                     &[
                         tex_coord[0] * tex_shape.0 as f32,
-                        tex_coord[1] * tex_shape.1 as f32,
+                        (1.0 - tex_coord[1]) * tex_shape.1 as f32,
                     ],
                     &tex_shape,
                     &tex_data,
+                    false,
                 );
             } else {
                 let nrm = del_geo_core::vec3::normalize(&ray_dir);
                 let env = del_geo_core::mat4_col_major::transform_homogeneous(&transform_env, &nrm)
                     .unwrap();
+                let env = del_geo_core::vec3::normalize(&env);
                 let tex_coord = del_geo_core::uvec3::map_to_unit2_equal_area(&env);
-                *pix = del_canvas::texture::nearest_integer_center::<3>(
+                let tex_coord = [tex_coord[0], 1.0 - tex_coord[1]];
+                *pix = del_canvas::image_interpolation::nearest::<3>(
                     &[
                         tex_coord[0] * tex_shape.0 as f32,
                         tex_coord[1] * tex_shape.1 as f32,
                     ],
                     &tex_shape,
                     &tex_data,
+                    false,
                 );
             }
         };
@@ -90,7 +114,7 @@ fn main() -> anyhow::Result<()> {
         img.par_chunks_mut(3)
             .enumerate()
             .for_each(|(i_pix, pix)| shoot_ray(i_pix, pix));
-        del_canvas::write_hdr_file("target/04_env_light.hdr", img_shape, &img)?;
+        del_canvas::write_hdr_file("target/04_env_light.exr", img_shape, &img)?;
     }
 
     {
@@ -99,25 +123,30 @@ fn main() -> anyhow::Result<()> {
         let shoot_ray = |i_pix: usize, pix: &mut image::Rgb<f32>| {
             let ih = i_pix / img_shape.0;
             let iw = i_pix % img_shape.0;
-            let (ray_org, ray_dir) = del_raycast_core::cam_pbrt::cast_ray_plus_z(
+            let (ray_org, ray_dir) = del_pbrt_cpu::cam_pbrt::cast_ray_plus_z(
                 (iw, ih),
                 (0., 0.),
                 img_shape,
-                camera_fov,
-                transform_camlcl2world,
+                camera.camera_fov,
+                camera.transform_camlcl2world,
             );
-            let t = del_geo_core::sphere::intersection_ray(0.7, &sphere_cntr, &ray_org, &ray_dir);
+            let t = del_geo_core::sphere::intersection_ray(
+                scene.sphere_rad,
+                &scene.sphere_cntr,
+                &ray_org,
+                &ray_dir,
+            );
             if let Some(t) = t {
                 use del_geo_core::vec3;
                 let hit_pos = vec3::axpy::<f32>(t, &ray_dir, &ray_org);
-                let hit_nrm = vec3::sub(&hit_pos, &sphere_cntr);
+                let hit_nrm = vec3::sub(&hit_pos, &scene.sphere_cntr);
                 let hit_nrm = vec3::normalize(&hit_nrm);
                 let mut radiance = [0.; 3];
                 use rand::Rng;
                 use rand::SeedableRng;
                 let mut rng = rand_chacha::ChaChaRng::seed_from_u64(i_pix as u64);
                 for _isample in 0..samples {
-                    let refl_dir: [f32; 3] = del_raycast_core::sampling::hemisphere_cos_weighted(
+                    let refl_dir: [f32; 3] = del_pbrt_cpu::sampling::hemisphere_cos_weighted(
                         &[hit_nrm[0], hit_nrm[1], hit_nrm[2]],
                         &[rng.random::<f32>(), rng.random::<f32>()],
                     )
@@ -129,13 +158,15 @@ fn main() -> anyhow::Result<()> {
                     )
                     .unwrap();
                     let tex_coord = del_geo_core::uvec3::map_to_unit2_equal_area(&env);
-                    let c = del_canvas::texture::nearest_integer_center::<3>(
+                    let tex_coord = [tex_coord[0], 1.0 - tex_coord[1]];
+                    let c = del_canvas::image_interpolation::nearest::<3>(
                         &[
                             tex_coord[0] * tex_shape.0 as f32,
                             tex_coord[1] * tex_shape.1 as f32,
                         ],
                         &tex_shape,
                         &tex_data,
+                        false,
                     );
                     radiance = vec3::add(&radiance, &c);
                 }
@@ -146,13 +177,14 @@ fn main() -> anyhow::Result<()> {
                 let env = del_geo_core::mat4_col_major::transform_homogeneous(&transform_env, &nrm)
                     .unwrap();
                 let tex_coord = del_geo_core::uvec3::map_to_unit2_equal_area(&env);
-                pix.0 = del_canvas::texture::nearest_integer_center::<3>(
+                pix.0 = del_canvas::image_interpolation::nearest::<3>(
                     &[
                         tex_coord[0] * tex_shape.0 as f32,
-                        tex_coord[1] * tex_shape.1 as f32,
+                        (1.0 - tex_coord[1]) * tex_shape.1 as f32,
                     ],
                     &tex_shape,
                     &tex_data,
+                    false,
                 );
             }
         };
@@ -168,7 +200,7 @@ fn main() -> anyhow::Result<()> {
             .enumerate()
             .for_each(|(i_pix, pix)| shoot_ray(i_pix, pix));
 
-        let file_ms = std::fs::File::create("target/04_env_light_material_sampling.hdr").unwrap();
+        let file_ms = std::fs::File::create("target/04_env_light_material_sampling.exr").unwrap();
         use image::codecs::hdr::HdrEncoder;
         let enc = HdrEncoder::new(file_ms);
         let _ = enc.encode(&img, img_shape.0, img_shape.1);
@@ -176,7 +208,7 @@ fn main() -> anyhow::Result<()> {
 
     {
         // light sampling
-        use del_raycast_core::env_map::*;
+        use del_pbrt_cpu::env_map::*;
         use image::Pixel;
         let samples = 64;
         let img: Vec<image::Rgb<f32>> = tex_data
@@ -199,8 +231,8 @@ fn main() -> anyhow::Result<()> {
             .collect();
 
         for _isample in 0..1024 * 1024 {
-            let r_x: f32 = del_raycast_core::sampling::radical_inverse(_isample, 2);
-            let r_y: f32 = del_raycast_core::sampling::radical_inverse(_isample, 3);
+            let r_x: f32 = del_pbrt_cpu::sampling::radical_inverse(_isample, 2);
+            let r_y: f32 = del_pbrt_cpu::sampling::radical_inverse(_isample, 3);
 
             let sampley = marginal_map[tex2pixel(r_y, texh)][0];
             let samplex =
@@ -220,18 +252,23 @@ fn main() -> anyhow::Result<()> {
 
         let shoot_ray = |i_pix: usize, pix: &mut [f32]| {
             let pix = arrayref::array_mut_ref![pix, 0, 3];
-            let (ray_org, ray_dir) = del_raycast_core::cam_pbrt::cast_ray_plus_z(
+            let (ray_org, ray_dir) = del_pbrt_cpu::cam_pbrt::cast_ray_plus_z(
                 (i_pix % img_shape.0, i_pix / img_shape.0),
                 (0., 0.),
                 img_shape,
-                camera_fov,
-                transform_camlcl2world,
+                camera.camera_fov,
+                camera.transform_camlcl2world,
             );
-            let t = del_geo_core::sphere::intersection_ray(0.7, &sphere_cntr, &ray_org, &ray_dir);
+            let t = del_geo_core::sphere::intersection_ray(
+                scene.sphere_rad,
+                &scene.sphere_cntr,
+                &ray_org,
+                &ray_dir,
+            );
             if let Some(t) = t {
                 use del_geo_core::vec3;
                 let hit_pos = vec3::axpy::<f32>(t, &ray_dir, &ray_org);
-                let hit_nrm = vec3::sub(&hit_pos, &sphere_cntr);
+                let hit_nrm = vec3::sub(&hit_pos, &scene.sphere_cntr);
                 let hit_nrm = vec3::normalize(&hit_nrm);
                 let nrm =
                     del_geo_core::mat4_col_major::transform_homogeneous(&transform_env, &hit_nrm)
@@ -239,8 +276,8 @@ fn main() -> anyhow::Result<()> {
 
                 let mut result = [0.; 3];
                 for _isample in 0..samples {
-                    let r_x: f32 = del_raycast_core::sampling::radical_inverse(_isample, 2);
-                    let r_y: f32 = del_raycast_core::sampling::radical_inverse(_isample, 3);
+                    let r_x: f32 = del_pbrt_cpu::sampling::radical_inverse(_isample, 2);
+                    let r_y: f32 = del_pbrt_cpu::sampling::radical_inverse(_isample, 3);
 
                     let sampley = marginal_map[tex2pixel(r_y, texh)][0];
                     let samplex =
@@ -269,13 +306,15 @@ fn main() -> anyhow::Result<()> {
                 let env = del_geo_core::mat4_col_major::transform_homogeneous(&transform_env, &nrm)
                     .unwrap();
                 let tex_coord = del_geo_core::uvec3::map_to_unit2_equal_area(&env);
-                *pix = del_canvas::texture::nearest_integer_center::<3>(
+                let tex_coord = [tex_coord[0], 1.0 - tex_coord[1]];
+                *pix = del_canvas::image_interpolation::nearest::<3>(
                     &[
                         tex_coord[0] * tex_shape.0 as f32,
                         tex_coord[1] * tex_shape.1 as f32,
                     ],
                     &tex_shape,
                     &tex_data,
+                    false,
                 );
             }
         };
@@ -287,7 +326,7 @@ fn main() -> anyhow::Result<()> {
         img.par_chunks_mut(3)
             .enumerate()
             .for_each(|(i_pix, pix)| shoot_ray(i_pix, pix));
-        del_canvas::write_hdr_file("target/04_env_light_sampling.hdr", img_shape, &img)?;
+        del_canvas::write_hdr_file("target/04_env_light_sampling.exr", img_shape, &img)?;
     }
 
     Ok(())

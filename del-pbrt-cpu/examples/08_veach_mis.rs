@@ -6,21 +6,19 @@ struct AreaLightGeometry {
 }
 
 struct MyScene {
-    shape_entities: Vec<del_raycast_core::shape::ShapeEntity>,
-    area_lights: Vec<del_raycast_core::area_light::AreaLight>,
-    materials: Vec<del_raycast_core::material::Material>,
+    shape_entities: Vec<del_pbrt_cpu::shape::ShapeEntity>,
+    area_lights: Vec<del_pbrt_cpu::area_light::AreaLight>,
+    materials: Vec<del_pbrt_cpu::material::Material>,
     area_light_geometries: Vec<AreaLightGeometry>,
     is_light_sample_uniform: bool,
 }
 
-fn parse_pbrt_file(
-    file_path: &str,
-) -> anyhow::Result<(MyScene, del_raycast_core::parse_pbrt::Camera)> {
+fn parse_pbrt_file(file_path: &str) -> anyhow::Result<(MyScene, del_pbrt_cpu::parse_pbrt::Camera)> {
     let scene = pbrt4::Scene::from_file(file_path)?;
-    let camera = del_raycast_core::parse_pbrt::camera(&scene);
-    let materials = del_raycast_core::parse_pbrt::parse_material(&scene);
-    let area_lights = del_raycast_core::parse_pbrt::parse_area_light(&scene);
-    let shape_entities = del_raycast_core::parse_pbrt::parse_shapes(&scene);
+    let camera = del_pbrt_cpu::parse_pbrt::camera(&scene);
+    let materials = del_pbrt_cpu::parse_pbrt::parse_material(&scene);
+    let area_lights = del_pbrt_cpu::parse_pbrt::parse_area_light(&scene);
+    let shape_entities = del_pbrt_cpu::parse_pbrt::parse_shapes(&scene);
     let area_light_geometries = {
         let mut area_light_geometries = vec![AreaLightGeometry::default(); area_lights.len()];
         for (i_shape_entity, shape_entity) in shape_entities.iter().enumerate() {
@@ -78,7 +76,7 @@ impl MyScene {
         if cos_theta_light < 0. {
             return None;
         } // backside of light
-        if !del_raycast_core::shape::is_visible(
+        if !del_pbrt_cpu::shape::is_visible(
             &self.shape_entities,
             pos_observe,
             &pos_light,
@@ -135,7 +133,7 @@ impl MyScene {
             return None;
         };
         // cast a shadow ray
-        if !del_raycast_core::shape::is_visible(
+        if !del_pbrt_cpu::shape::is_visible(
             &self.shape_entities,
             pos_observe,
             &pos_light,
@@ -154,7 +152,7 @@ impl MyScene {
     }
 }
 
-impl del_raycast_core::monte_carlo_integrator::Scene for MyScene {
+impl del_pbrt_cpu::monte_carlo_integrator::Scene for MyScene {
     fn eval_brdf(
         &self,
         i_shape_entity: usize,
@@ -166,7 +164,7 @@ impl del_raycast_core::monte_carlo_integrator::Scene for MyScene {
         use del_geo_core::vec3::Vec3;
         assert!((ray_in_outward_normalized.norm() - 1.0).abs() < 1.0e-5);
         let i_material = self.shape_entities[i_shape_entity].material_index.unwrap();
-        del_raycast_core::material::eval_brdf(
+        del_pbrt_cpu::material::eval_brdf(
             &self.materials[i_material],
             obj_nrm,
             ray_in_outward_normalized,
@@ -210,7 +208,7 @@ impl del_raycast_core::monte_carlo_integrator::Scene for MyScene {
         let se = &self.shape_entities[i_shape_entity];
         let i_material = se.material_index.unwrap();
         assert!(i_material < self.materials.len());
-        del_raycast_core::material::sample_brdf(
+        del_pbrt_cpu::material::sample_brdf(
             &self.materials[i_material],
             nrm_obj,
             ray_in_uvec_outward,
@@ -224,7 +222,7 @@ impl del_raycast_core::monte_carlo_integrator::Scene for MyScene {
         ray_dir: &[f32; 3],
     ) -> Option<([f32; 3], [f32; 3], [f32; 3], f32, usize)> {
         let Some((t, i_shape_entity, i_elem)) =
-            del_raycast_core::shape::intersection_ray_against_shape_entities(
+            del_pbrt_cpu::shape::intersection_ray_against_shape_entities(
                 ray_org,
                 ray_dir,
                 &self.shape_entities,
@@ -234,7 +232,7 @@ impl del_raycast_core::monte_carlo_integrator::Scene for MyScene {
         };
         let hit_pos_world = del_geo_core::vec3::axpy(t, &ray_dir, &ray_org);
         let se = &self.shape_entities[i_shape_entity];
-        let hit_nrm_world = del_raycast_core::shape::normal_at(se, &hit_pos_world, i_elem);
+        let hit_nrm_world = del_pbrt_cpu::shape::normal_at(se, &hit_pos_world, i_elem);
         let hit_emission = if let Some(ial) = se.area_light_index {
             self.area_lights[ial]
                 .spectrum_rgb
@@ -246,9 +244,9 @@ impl del_raycast_core::monte_carlo_integrator::Scene for MyScene {
             let i_material = self.shape_entities[i_shape_entity].material_index.unwrap();
             let material = &self.materials[i_material];
             match material {
-                del_raycast_core::material::Material::None => 100f32,
-                del_raycast_core::material::Material::Diff(_diff) => 100f32,
-                del_raycast_core::material::Material::Cond(cond) => {
+                del_pbrt_cpu::material::Material::None => 100f32,
+                del_pbrt_cpu::material::Material::Diff(_diff) => 100f32,
+                del_pbrt_cpu::material::Material::Cond(cond) => {
                     cond.uroughness.max(cond.vroughness)
                 }
                 _ => panic!("Not implement material for roughness"),
@@ -301,7 +299,7 @@ fn mc_integration(
     integration_type: IntegrationType,
     str_type: &str,
     scene: &MyScene,
-    camera: &del_raycast_core::parse_pbrt::Camera,
+    camera: &del_pbrt_cpu::parse_pbrt::Camera,
     num_sample: usize,
     max_depth: usize,
     img_gt: &[f32],
@@ -317,17 +315,15 @@ fn mc_integration(
             let (ray0_org, ray0_dir) = camera.ray(
                 i_pix,
                 [
-                    del_raycast_core::sampling::tent(rng.random::<f32>()),
-                    del_raycast_core::sampling::tent(rng.random::<f32>()),
+                    del_pbrt_cpu::sampling::tent(rng.random::<f32>()),
+                    del_pbrt_cpu::sampling::tent(rng.random::<f32>()),
                 ],
             );
             let rad = match integration_type {
-                IntegrationType::PathTracing => {
-                    del_raycast_core::monte_carlo_integrator::radiance_pt(
-                        &ray0_org, &ray0_dir, scene, max_depth, &mut rng,
-                    )
-                }
-                IntegrationType::Mis => del_raycast_core::monte_carlo_integrator::radiance_mis(
+                IntegrationType::PathTracing => del_pbrt_cpu::monte_carlo_integrator::radiance_pt(
+                    &ray0_org, &ray0_dir, scene, max_depth, &mut rng,
+                ),
+                IntegrationType::Mis => del_pbrt_cpu::monte_carlo_integrator::radiance_mis(
                     &ray0_org,
                     &ray0_dir,
                     scene,
@@ -336,7 +332,7 @@ fn mc_integration(
                     is_increasing_roughness,
                 ),
                 IntegrationType::NextEventEstimation => {
-                    del_raycast_core::monte_carlo_integrator::radiance_nee(
+                    del_pbrt_cpu::monte_carlo_integrator::radiance_nee(
                         &ray0_org,
                         &ray0_dir,
                         scene,
@@ -383,7 +379,7 @@ fn mc_integration(
 fn main() -> anyhow::Result<()> {
     let pbrt_file_path = "asset/veach-mis/scene-v4.pbrt";
     let (scene, camera) = parse_pbrt_file(pbrt_file_path)?;
-    del_raycast_core::shape::write_wavefront_obj_file_from_camera_view(
+    del_pbrt_cpu::shape::write_wavefront_obj_file_from_camera_view(
         "target/08_veach_mis.obj",
         &scene.shape_entities,
         &camera.transform_world2camlcl,
@@ -393,7 +389,7 @@ fn main() -> anyhow::Result<()> {
         let shoot_ray = |i_pix: usize, pix: &mut [f32]| {
             let pix = arrayref::array_mut_ref![pix, 0, 3];
             let (ray_org, ray_dir) = camera.ray(i_pix, [0.; 2]);
-            use del_raycast_core::shape::intersection_ray_against_shape_entities;
+            use del_pbrt_cpu::shape::intersection_ray_against_shape_entities;
             let t = match intersection_ray_against_shape_entities(
                 &ray_org,
                 &ray_dir,

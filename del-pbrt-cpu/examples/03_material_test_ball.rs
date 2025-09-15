@@ -1,5 +1,5 @@
 use del_msh_cpu::search_bvh3::TriMeshWithBvh;
-use del_raycast_core::{
+use del_pbrt_cpu::{
     parse_pbrt,
     textures::{CheckerBoardTexture, Texture},
 };
@@ -93,20 +93,15 @@ fn get_tri_uv(tri_i: usize, pos: &[f32; 3], shape: &Shape) -> [f32; 2] {
     acc
 }
 
-fn parse() -> anyhow::Result<(
-    Vec<Shape>,
-    del_raycast_core::parse_pbrt::Camera,
-    pbrt4::Scene,
-)> {
+fn parse() -> anyhow::Result<(Vec<Shape>, del_pbrt_cpu::parse_pbrt::Camera, pbrt4::Scene)> {
     let path_file = "asset/material-testball/scene-v4.pbrt";
     let scene = pbrt4::Scene::from_file(path_file)?;
     let mut shapes: Vec<Shape> = vec![];
-    let camera = del_raycast_core::parse_pbrt::camera(&scene);
+    let camera = del_pbrt_cpu::parse_pbrt::camera(&scene);
     for shape_entity in scene.shapes.iter() {
         let transform = shape_entity.transform.to_cols_array();
         let (_, _, tri2vtx, vtx2xyz, _, uvs) =
-            del_raycast_core::parse_pbrt::trimesh3_from_shape_entity(shape_entity, path_file)
-                .unwrap();
+            del_pbrt_cpu::parse_pbrt::trimesh3_from_shape_entity(shape_entity, path_file).unwrap();
         let bvhnodes = del_msh_cpu::bvhnodes_morton::from_triangle_mesh(&tri2vtx, &vtx2xyz, 3);
         let bvhnode2aabb = del_msh_cpu::bvhnode2aabb3::from_uniform_mesh_with_bvh(
             0,
@@ -167,7 +162,7 @@ fn main() -> anyhow::Result<()> {
             let iw = i_pix % img_shape.0;
             let ih = i_pix / img_shape.0;
 
-            let (ray_org, ray_dir) = del_raycast_core::cam_pbrt::cast_ray_plus_z(
+            let (ray_org, ray_dir) = del_pbrt_cpu::cam_pbrt::cast_ray_plus_z(
                 (iw, ih),
                 (0., 0.),
                 img_shape,
@@ -194,14 +189,14 @@ fn main() -> anyhow::Result<()> {
 
     {
         // computing reflectance image
-        let materials = del_raycast_core::parse_pbrt::parse_material(&scene);
-        let textures = del_raycast_core::parse_pbrt::parse_texture(&scene);
+        let materials = del_pbrt_cpu::parse_pbrt::parse_material(&scene);
+        let textures = del_pbrt_cpu::parse_pbrt::parse_texture(&scene);
         let shoot_ray = |i_pix: usize, pix: &mut [f32]| {
             let pix = arrayref::array_mut_ref![pix, 0, 3];
             let iw = i_pix % img_shape.0;
             let ih = i_pix / img_shape.0;
 
-            let (ray_org, ray_dir) = del_raycast_core::cam_pbrt::cast_ray_plus_z(
+            let (ray_org, ray_dir) = del_pbrt_cpu::cam_pbrt::cast_ray_plus_z(
                 (iw, ih),
                 (0., 0.),
                 img_shape,
@@ -226,14 +221,14 @@ fn main() -> anyhow::Result<()> {
             );
 
             let reflectance = match &materials[i_material] {
-                del_raycast_core::material::Material::Diff(mat) => {
+                del_pbrt_cpu::material::Material::Diff(mat) => {
                     if mat.reflectance_texture != usize::MAX {
                         let tex = &textures[mat.reflectance_texture];
                         match tex {
                             Texture::Checkerboard(tex) => {
                                 let pos = del_geo_core::vec3::axpy(t, &ray_dir, &ray_org);
                                 let uv = get_tri_uv(tri_i, &pos, shape);
-                                del_raycast_core::textures::sample_checkerboard(
+                                del_pbrt_cpu::textures::sample_checkerboard(
                                     &uv, tex.uscale, tex.vscale, &tex.tex1, &tex.tex2,
                                 )
                             }
@@ -242,8 +237,8 @@ fn main() -> anyhow::Result<()> {
                         mat.reflectance
                     }
                 }
-                del_raycast_core::material::Material::Cond(mat) => mat.reflectance,
-                del_raycast_core::material::Material::CoaDiff(mat) => mat.reflectance,
+                del_pbrt_cpu::material::Material::Cond(mat) => mat.reflectance,
+                del_pbrt_cpu::material::Material::CoaDiff(mat) => mat.reflectance,
                 _ => {
                     panic!("No reflectance of Material");
                 }
