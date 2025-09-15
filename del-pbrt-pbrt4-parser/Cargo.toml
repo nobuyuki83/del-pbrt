@@ -1,0 +1,12 @@
+[package]
+name = "del-pbrt-pbrt4-parser"
+description = "PBRT v4 file parser"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+thiserror = "1.0"
+glam = "0.24"
+
+[dev-dependencies]
+tempdir = "0.3.7"
