@@ -14,7 +14,7 @@ struct MyScene {
 }
 
 fn parse_pbrt_file(file_path: &str) -> anyhow::Result<(MyScene, del_pbrt_cpu::parse_pbrt::Camera)> {
-    let scene = pbrt4::Scene::from_file(file_path)?;
+    let scene = del_pbrt_pbrt4_parser::Scene::from_file(file_path)?;
     let camera = del_pbrt_cpu::parse_pbrt::camera(&scene);
     let materials = del_pbrt_cpu::parse_pbrt::parse_material(&scene);
     let area_lights = del_pbrt_cpu::parse_pbrt::parse_area_light(&scene);

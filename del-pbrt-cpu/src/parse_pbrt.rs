@@ -12,12 +12,12 @@ pub struct Camera {
     pub img_shape: (usize, usize),
 }
 
-pub fn camera(scene: &pbrt4::Scene) -> Camera {
+pub fn camera(scene: &del_pbrt_pbrt4_parser::Scene) -> Camera {
     let camera = scene.camera.as_ref().unwrap();
     let transform = camera.transform.to_cols_array();
     // dbg!(&camera.params);
     let fov = match camera.params {
-        pbrt4::types::Camera::Perspective { fov, .. } => fov,
+        del_pbrt_pbrt4_parser::types::Camera::Perspective { fov, .. } => fov,
         _ => {
             todo!()
         }
@@ -60,11 +60,11 @@ type Trimesh3Data = (
 
 #[allow(clippy::type_complexity)]
 pub fn trimesh3_from_shape_entity(
-    shape_entity: &pbrt4::ShapeEntity,
+    shape_entity: &del_pbrt_pbrt4_parser::ShapeEntity,
     path_file: &str,
 ) -> Option<Trimesh3Data> {
     match &shape_entity.params {
-        pbrt4::types::Shape::TriangleMesh {
+        del_pbrt_pbrt4_parser::types::Shape::TriangleMesh {
             positions,
             indices,
             normals,
@@ -81,7 +81,7 @@ pub fn trimesh3_from_shape_entity(
                 uvs.to_vec(),
             ))
         }
-        pbrt4::types::Shape::PlyMesh { filename } => {
+        del_pbrt_pbrt4_parser::types::Shape::PlyMesh { filename } => {
             let filename = filename.strip_suffix("\"").unwrap().to_string();
             let filename = filename.strip_prefix("\"").unwrap().to_string();
             let path = std::path::Path::new(path_file);
@@ -133,15 +133,15 @@ pub fn trimesh3_from_shape_entity(
     }
 }
 
-pub fn spectrum_from_light_entity(area_light_entity: &pbrt4::types::AreaLight) -> Option<[f32; 3]> {
+pub fn spectrum_from_light_entity(area_light_entity: &del_pbrt_pbrt4_parser::types::AreaLight) -> Option<[f32; 3]> {
     match area_light_entity {
-        pbrt4::types::AreaLight::Diffuse {
+        del_pbrt_pbrt4_parser::types::AreaLight::Diffuse {
             filename: _filename,
             two_sided: _two_sided,
             spectrum,
             scale: _scale,
         } => match spectrum.unwrap().to_owned() {
-            pbrt4::param::Spectrum::Rgb(rgb) => Some(rgb),
+            del_pbrt_pbrt4_parser::param::Spectrum::Rgb(rgb) => Some(rgb),
             _ => {
                 panic!();
             }
@@ -151,7 +151,7 @@ pub fn spectrum_from_light_entity(area_light_entity: &pbrt4::types::AreaLight) -
 
 pub fn get_f32_array3_from_params(
     key: &str,
-    dict_mp: &std::collections::HashMap<String, (pbrt4::param::ParamType, String, String)>,
+    dict_mp: &std::collections::HashMap<String, (del_pbrt_pbrt4_parser::param::ParamType, String, String)>,
 ) -> Option<[f32; 3]> {
     let mp = dict_mp.get(key)?;
     assert_eq!(mp.1, key.to_string());
@@ -166,7 +166,7 @@ pub fn get_f32_array3_from_params(
 
 fn get_bool_from_params(
     key: &str,
-    dict_mp: &std::collections::HashMap<String, (pbrt4::param::ParamType, String, String)>,
+    dict_mp: &std::collections::HashMap<String, (del_pbrt_pbrt4_parser::param::ParamType, String, String)>,
 ) -> Option<bool> {
     let mp = dict_mp.get(key)?;
     assert_eq!(mp.1, key.to_string());
@@ -176,7 +176,7 @@ fn get_bool_from_params(
 
 pub fn get_f32_from_params(
     key: &str,
-    dict_mp: &std::collections::HashMap<String, (pbrt4::param::ParamType, String, String)>,
+    dict_mp: &std::collections::HashMap<String, (del_pbrt_pbrt4_parser::param::ParamType, String, String)>,
 ) -> anyhow::Result<f32> {
     let mp = match dict_mp.get(key) {
         Some(mp) => mp,
@@ -189,11 +189,11 @@ pub fn get_f32_from_params(
 
 fn get_texture_index_from_material_param(
     key: &str,
-    dict_mp: &std::collections::HashMap<String, (pbrt4::param::ParamType, String, String)>,
-    textures: &[pbrt4::types::Texture],
+    dict_mp: &std::collections::HashMap<String, (del_pbrt_pbrt4_parser::param::ParamType, String, String)>,
+    textures: &[del_pbrt_pbrt4_parser::types::Texture],
 ) -> Option<usize> {
     let mp = dict_mp.get(key)?;
-    if mp.0 != pbrt4::param::ParamType::Texture {
+    if mp.0 != del_pbrt_pbrt4_parser::param::ParamType::Texture {
         return None;
     }
 
@@ -208,7 +208,7 @@ fn get_texture_index_from_material_param(
     None
 }
 
-pub fn parse_material(scene: &pbrt4::Scene) -> Vec<crate::material::Material> {
+pub fn parse_material(scene: &del_pbrt_pbrt4_parser::Scene) -> Vec<crate::material::Material> {
     let mut materials = Vec::<crate::material::Material>::with_capacity(scene.materials.len());
     for mat in scene.materials.iter() {
         match mat.attributes.as_str() {
@@ -265,11 +265,11 @@ pub fn parse_material(scene: &pbrt4::Scene) -> Vec<crate::material::Material> {
     materials
 }
 
-pub fn parse_area_light(scene: &pbrt4::Scene) -> Vec<AreaLight> {
+pub fn parse_area_light(scene: &del_pbrt_pbrt4_parser::Scene) -> Vec<AreaLight> {
     let mut area_lights = Vec::<AreaLight>::new();
     for area_light in &scene.area_lights {
         match area_light {
-            pbrt4::types::AreaLight::Diffuse {
+            del_pbrt_pbrt4_parser::types::AreaLight::Diffuse {
                 filename: _filename,
                 two_sided,
                 spectrum,
@@ -277,8 +277,8 @@ pub fn parse_area_light(scene: &pbrt4::Scene) -> Vec<AreaLight> {
             } => {
                 let spectrum_rgb = if let Some(spectrum) = spectrum {
                     match spectrum {
-                        pbrt4::param::Spectrum::Rgb(rgb) => Some(rgb),
-                        pbrt4::param::Spectrum::Blackbody(_i) => {
+                        del_pbrt_pbrt4_parser::param::Spectrum::Rgb(rgb) => Some(rgb),
+                        del_pbrt_pbrt4_parser::param::Spectrum::Blackbody(_i) => {
                             todo!()
                         }
                     }
@@ -296,11 +296,11 @@ pub fn parse_area_light(scene: &pbrt4::Scene) -> Vec<AreaLight> {
     area_lights
 }
 
-pub fn parse_shapes(scene: &pbrt4::Scene) -> Vec<ShapeEntity> {
+pub fn parse_shapes(scene: &del_pbrt_pbrt4_parser::Scene) -> Vec<ShapeEntity> {
     let mut shape_entities = Vec::<ShapeEntity>::new();
     for shape_entity in scene.shapes.iter() {
         let shape = match &shape_entity.params {
-            pbrt4::types::Shape::TriangleMesh {
+            del_pbrt_pbrt4_parser::types::Shape::TriangleMesh {
                 indices,
                 positions,
                 normals,
@@ -322,7 +322,7 @@ pub fn parse_shapes(scene: &pbrt4::Scene) -> Vec<ShapeEntity> {
                     tri2cumsumarea,
                 }
             }
-            pbrt4::types::Shape::Sphere { radius, .. } => {
+            del_pbrt_pbrt4_parser::types::Shape::Sphere { radius, .. } => {
                 crate::shape::ShapeType::Sphere { radius: *radius }
             }
             _ => {
@@ -345,7 +345,7 @@ pub fn parse_shapes(scene: &pbrt4::Scene) -> Vec<ShapeEntity> {
     shape_entities
 }
 
-pub fn parse_texture(scene: &pbrt4::Scene) -> Vec<crate::textures::Texture> {
+pub fn parse_texture(scene: &del_pbrt_pbrt4_parser::Scene) -> Vec<crate::textures::Texture> {
     let mut textures = Vec::<crate::textures::Texture>::with_capacity(scene.textures.len());
     for tex in scene.textures.iter() {
         match tex.class.as_str() {

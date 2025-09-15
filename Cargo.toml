@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "del-pbrt-cpu",
+    "del-pbrt-pbrt4-parser"
 ]
 resolver = "2"
 
@@ -25,17 +26,18 @@ arrayref = "0.3.9"
 slice-of-array = "0.3.2"
 rayon = "1.10.0"
 
+# internal
+del-pbrt-pbrt4-parser = {path="del-pbrt-pbrt4-parser"}
+
 # for development
 # del-geo-core = { path = "../del-geo/del-geo-core" }
 # del-msh-core = { path = "../del-msh/del-msh-core" }
 # del-canvas = {path = "../del-canvas"}
-# pbrt4 = { path = "../pbrt4" }
 
 # for git push
 del-geo-core = { git = "https://github.com/nobuyuki83/del-geo.git"}
 del-msh-cpu = { git = "https://github.com/nobuyuki83/del-msh.git" }
 del-canvas = {git="https://github.com/nobuyuki83/del-canvas.git"}
-pbrt4 = { git = "https://github.com/nobuyuki83/pbrt4.git" }
 
 # for deploy
 # del-geo-core = "=0.1.33"
