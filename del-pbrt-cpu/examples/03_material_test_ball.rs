@@ -1,7 +1,6 @@
 use del_msh_cpu::search_bvh3::TriMeshWithBvh;
 use del_pbrt_cpu::{
-    parse_pbrt,
-    textures::{CheckerBoardTexture, Texture},
+    textures::Texture,
 };
 
 struct Shape {

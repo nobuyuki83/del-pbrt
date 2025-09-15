@@ -3,7 +3,6 @@
 use std::{
     collections::HashMap,
     num::{ParseFloatError, ParseIntError},
-    path::Iter,
     result,
     str::{FromStr, ParseBoolError},
 };

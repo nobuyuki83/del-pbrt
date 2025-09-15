@@ -78,9 +78,7 @@ impl<'a> Iterator for Tokenizer<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         loop {
-            let Some((start, ch)) = self.next_char() else {
-                return None;
-            };
+            let (start, ch) = self.next_char()?;
 
             let token = match ch {
                 '[' | ']' => self.token(start, start + 1),

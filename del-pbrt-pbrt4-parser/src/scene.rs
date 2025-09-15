@@ -1,6 +1,6 @@
 //! Scene loader
 
-use std::{collections::HashMap, env, fs, path::Path, slice, str, thread::current};
+use std::{collections::HashMap, env, fs, path::Path, slice, str};
 
 use glam::{Mat4, Vec3};
 
@@ -111,7 +111,7 @@ impl Scene {
     /// # Arguments
     /// - `data` is a string buffer with the file data.
     /// - `working_directory` is a file's directory path which required for includes
-    /// with relative paths to work.
+    ///     with relative paths to work.
     pub fn load(data: &str, working_directory: Option<&Path>) -> Result<Scene> {
         let mut scene = Scene::default();
 
@@ -138,7 +138,7 @@ impl Scene {
             // Fetch next element.
             let element = match parser.parse_next() {
                 Ok(element) => element,
-                Err(err) if matches!(err, Error::EndOfFile) => {
+                Err(Error::EndOfFile) => {
                     // Remove parser from the stack.
                     parsers.pop();
                     continue;

@@ -1,6 +1,6 @@
 //! Data structures that can be deserialized from a parameter list.
 
-use std::{collections::HashMap, default, str::FromStr, string};
+use std::{collections::HashMap, str::FromStr};
 
 use crate::{
     param::{Param, ParamList, ParamType, Spectrum},
@@ -606,23 +606,19 @@ impl Material {
         // Parameters to materials are distinctive in that textures can be used to
         // specify spatially-varying values for the parameters.
 
-        let mut attrib = "".to_string();
-        match _params.get("type") {
+        let attrib = match _params.get("type") {
             Some(t) => {
-                attrib = t.single::<String>().unwrap();
+                t.single::<String>().unwrap()
             }
             None => {
-                attrib = "".to_string();
+                "".to_string()
             }
-        }
+        };
         // println!("{:?}", attrib);
         let mut color = [0.0, 0.0, 0.0];
         match _params.get("reflectance") {
-            Some(r) => match r.ty {
-                ParamType::Rgb => {
+            Some(r) => if r.ty == ParamType::Rgb {
                     color = r.rgb().unwrap();
-                }
-                _ => {}
             },
             None => {
                 color = [0.0, 0.0, 0.0];
