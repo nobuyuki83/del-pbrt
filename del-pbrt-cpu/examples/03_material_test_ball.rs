@@ -93,7 +93,11 @@ fn get_tri_uv(tri_i: usize, pos: &[f32; 3], shape: &Shape) -> [f32; 2] {
     acc
 }
 
-fn parse() -> anyhow::Result<(Vec<Shape>, del_pbrt_cpu::parse_pbrt::Camera, del_pbrt_pbrt4_parser::Scene)> {
+fn parse() -> anyhow::Result<(
+    Vec<Shape>,
+    del_pbrt_cpu::parse_pbrt::Camera,
+    del_pbrt_pbrt4_parser::Scene,
+)> {
     let path_file = "asset/material-testball/scene-v4.pbrt";
     let scene = del_pbrt_pbrt4_parser::Scene::from_file(path_file)?;
     let mut shapes: Vec<Shape> = vec![];

@@ -466,7 +466,7 @@ impl Scene {
                 }
                 Element::ObjectInstance { name } => {
                     let Some(object_index) = named_objects.get(name).copied() else {
-                        return Err(Error::NotFound)
+                        return Err(Error::NotFound);
                     };
 
                     let instance = Instance {

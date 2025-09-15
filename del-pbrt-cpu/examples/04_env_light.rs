@@ -76,9 +76,11 @@ fn main() -> anyhow::Result<()> {
                 let hit_nrm = vec3::normalize(&nrm);
                 let refl = vec3::mirror_reflection(&ray_dir, &hit_nrm);
                 let refl = vec3::normalize(&refl);
-                let env =
-                    del_geo_core::mat4_col_major::transform_homogeneous(&transform_world2lcl_env, &refl)
-                        .unwrap();
+                let env = del_geo_core::mat4_col_major::transform_homogeneous(
+                    &transform_world2lcl_env,
+                    &refl,
+                )
+                .unwrap();
                 let tex_coord = del_geo_core::uvec3::map_to_unit2_equal_area(&env);
                 *pix = del_canvas::image_interpolation::nearest::<3>(
                     &[
@@ -91,14 +93,17 @@ fn main() -> anyhow::Result<()> {
                 );
             } else {
                 let nrm = del_geo_core::vec3::normalize(&ray_dir);
-                let env = del_geo_core::mat4_col_major::transform_homogeneous(&transform_world2lcl_env, &nrm)
-                    .unwrap();
+                let env = del_geo_core::mat4_col_major::transform_homogeneous(
+                    &transform_world2lcl_env,
+                    &nrm,
+                )
+                .unwrap();
                 let env = del_geo_core::vec3::normalize(&env);
                 let tex_coord = del_geo_core::uvec3::map_to_unit2_equal_area(&env);
                 *pix = del_canvas::image_interpolation::nearest::<3>(
                     &[
                         tex_coord[0] * tex_shape.0 as f32,
-                        (1.0-tex_coord[1]) * tex_shape.1 as f32,
+                        (1.0 - tex_coord[1]) * tex_shape.1 as f32,
                     ],
                     &tex_shape,
                     &tex_data,
@@ -173,8 +178,11 @@ fn main() -> anyhow::Result<()> {
                 pix.0 = radiance;
             } else {
                 let nrm = del_geo_core::vec3::normalize(&ray_dir);
-                let env = del_geo_core::mat4_col_major::transform_homogeneous(&transform_world2lcl_env, &nrm)
-                    .unwrap();
+                let env = del_geo_core::mat4_col_major::transform_homogeneous(
+                    &transform_world2lcl_env,
+                    &nrm,
+                )
+                .unwrap();
                 let tex_coord = del_geo_core::uvec3::map_to_unit2_equal_area(&env);
                 pix.0 = del_canvas::image_interpolation::nearest::<3>(
                     &[
@@ -269,9 +277,11 @@ fn main() -> anyhow::Result<()> {
                 let hit_pos = vec3::axpy::<f32>(t, &ray_dir, &ray_org);
                 let hit_nrm = vec3::sub(&hit_pos, &scene.sphere_cntr);
                 let hit_nrm = vec3::normalize(&hit_nrm);
-                let nrm =
-                    del_geo_core::mat4_col_major::transform_homogeneous(&transform_world2lcl_env, &hit_nrm)
-                        .unwrap();
+                let nrm = del_geo_core::mat4_col_major::transform_homogeneous(
+                    &transform_world2lcl_env,
+                    &hit_nrm,
+                )
+                .unwrap();
 
                 let mut result = [0.; 3];
                 for _isample in 0..samples {
@@ -302,8 +312,11 @@ fn main() -> anyhow::Result<()> {
                 *pix = result;
             } else {
                 let nrm = del_geo_core::vec3::normalize(&ray_dir);
-                let env = del_geo_core::mat4_col_major::transform_homogeneous(&transform_world2lcl_env, &nrm)
-                    .unwrap();
+                let env = del_geo_core::mat4_col_major::transform_homogeneous(
+                    &transform_world2lcl_env,
+                    &nrm,
+                )
+                .unwrap();
                 let tex_coord = del_geo_core::uvec3::map_to_unit2_equal_area(&env);
                 let tex_coord = [tex_coord[0], 1.0 - tex_coord[1]];
                 *pix = del_canvas::image_interpolation::nearest::<3>(

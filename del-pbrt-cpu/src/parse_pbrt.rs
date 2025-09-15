@@ -133,7 +133,9 @@ pub fn trimesh3_from_shape_entity(
     }
 }
 
-pub fn spectrum_from_light_entity(area_light_entity: &del_pbrt_pbrt4_parser::types::AreaLight) -> Option<[f32; 3]> {
+pub fn spectrum_from_light_entity(
+    area_light_entity: &del_pbrt_pbrt4_parser::types::AreaLight,
+) -> Option<[f32; 3]> {
     match area_light_entity {
         del_pbrt_pbrt4_parser::types::AreaLight::Diffuse {
             filename: _filename,
@@ -151,7 +153,10 @@ pub fn spectrum_from_light_entity(area_light_entity: &del_pbrt_pbrt4_parser::typ
 
 pub fn get_f32_array3_from_params(
     key: &str,
-    dict_mp: &std::collections::HashMap<String, (del_pbrt_pbrt4_parser::param::ParamType, String, String)>,
+    dict_mp: &std::collections::HashMap<
+        String,
+        (del_pbrt_pbrt4_parser::param::ParamType, String, String),
+    >,
 ) -> Option<[f32; 3]> {
     let mp = dict_mp.get(key)?;
     assert_eq!(mp.1, key.to_string());
@@ -166,7 +171,10 @@ pub fn get_f32_array3_from_params(
 
 fn get_bool_from_params(
     key: &str,
-    dict_mp: &std::collections::HashMap<String, (del_pbrt_pbrt4_parser::param::ParamType, String, String)>,
+    dict_mp: &std::collections::HashMap<
+        String,
+        (del_pbrt_pbrt4_parser::param::ParamType, String, String),
+    >,
 ) -> Option<bool> {
     let mp = dict_mp.get(key)?;
     assert_eq!(mp.1, key.to_string());
@@ -176,7 +184,10 @@ fn get_bool_from_params(
 
 pub fn get_f32_from_params(
     key: &str,
-    dict_mp: &std::collections::HashMap<String, (del_pbrt_pbrt4_parser::param::ParamType, String, String)>,
+    dict_mp: &std::collections::HashMap<
+        String,
+        (del_pbrt_pbrt4_parser::param::ParamType, String, String),
+    >,
 ) -> anyhow::Result<f32> {
     let mp = match dict_mp.get(key) {
         Some(mp) => mp,
@@ -189,7 +200,10 @@ pub fn get_f32_from_params(
 
 fn get_texture_index_from_material_param(
     key: &str,
-    dict_mp: &std::collections::HashMap<String, (del_pbrt_pbrt4_parser::param::ParamType, String, String)>,
+    dict_mp: &std::collections::HashMap<
+        String,
+        (del_pbrt_pbrt4_parser::param::ParamType, String, String),
+    >,
     textures: &[del_pbrt_pbrt4_parser::types::Texture],
 ) -> Option<usize> {
     let mp = dict_mp.get(key)?;
