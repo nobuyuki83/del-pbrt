@@ -607,19 +607,17 @@ impl Material {
         // specify spatially-varying values for the parameters.
 
         let attrib = match _params.get("type") {
-            Some(t) => {
-                t.single::<String>().unwrap()
-            }
-            None => {
-                "".to_string()
-            }
+            Some(t) => t.single::<String>().unwrap(),
+            None => "".to_string(),
         };
         // println!("{:?}", attrib);
         let mut color = [0.0, 0.0, 0.0];
         match _params.get("reflectance") {
-            Some(r) => if r.ty == ParamType::Rgb {
+            Some(r) => {
+                if r.ty == ParamType::Rgb {
                     color = r.rgb().unwrap();
-            },
+                }
+            }
             None => {
                 color = [0.0, 0.0, 0.0];
             }

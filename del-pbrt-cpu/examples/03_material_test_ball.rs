@@ -1,7 +1,5 @@
 use del_msh_cpu::search_bvh3::TriMeshWithBvh;
-use del_pbrt_cpu::{
-    textures::Texture,
-};
+use del_pbrt_cpu::textures::Texture;
 
 struct Shape {
     vtx2xyz: Vec<f32>,
