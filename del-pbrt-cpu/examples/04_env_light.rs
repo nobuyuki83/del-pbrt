@@ -1,14 +1,60 @@
 struct MyScene {
     sphere_rad: f32,
     sphere_cntr: [f32; 3],
+    tex_shape: (usize, usize),
+    tex_data: Vec<f32>,
+    transform_lcl2world_env: [f32;16],
+    transform_world2lcl_env: [f32;16],
     materials: Vec<del_pbrt_cpu::material::Material>,
 }
 
 fn parse_pbrt_file(file_path: &str) -> anyhow::Result<(MyScene, del_pbrt_cpu::parse_pbrt::Camera)> {
     let scene = del_pbrt_pbrt4_parser::Scene::from_file(file_path)?;
+    /*
+    {
+        let film = scene.film.as_ref().unwrap();
+        let filename = &film.filename;
+        dbg!(filename);
+    }
+     */
+    assert_eq!(scene.lights.len(), 1);
+    let path_env = {
+        use std::path::Path;
+        let lcl_path_env = match &scene.lights[0].params {
+            del_pbrt_pbrt4_parser::types::Light::Infinite { filename, spectrum } => {
+                let filename = filename.clone().unwrap();
+                let filename = filename
+                    .strip_prefix('"')
+                    .unwrap()
+                    .strip_suffix('"')
+                    .unwrap();
+                filename.to_string()
+            }
+            _ => {
+                todo!()
+            }
+        };
+        let path = Path::new(file_path);
+        path.with_file_name(lcl_path_env)
+    };
+    let transform_lcl2world_env = scene.lights[0].transform.to_cols_array();
+    let transform_world2lcl_env =
+        del_geo_core::mat4_col_major::try_inverse_with_pivot(&transform_lcl2world_env).unwrap();
+    let (tex_shape, tex_data) = {
+        let pfm = del_pbrt_cpu::io_pfm::PFM::read_from(path_env)?;
+        ((pfm.w, pfm.h), pfm.data)
+    };
+    //dbg!(&scene.instances);
+    //dbg!(&scene.textures);
+    //dbg!(&scene.area_lights);
+    //dbg!(&scene.lights);
+    //dbg!(&scene.materials);
+    //dbg!(&scene.objects);
+    //dbg!(&scene.shapes);
     let camera = del_pbrt_cpu::parse_pbrt::camera(&scene);
     let materials = del_pbrt_cpu::parse_pbrt::parse_material(&scene);
     let shape_entities = del_pbrt_cpu::parse_pbrt::parse_shapes(&scene);
+    assert_eq!(shape_entities.len(), 1);
     //
     // Get the area light source
     let rad = match shape_entities[0].shape {
@@ -21,6 +67,10 @@ fn parse_pbrt_file(file_path: &str) -> anyhow::Result<(MyScene, del_pbrt_cpu::pa
     let scene = MyScene {
         sphere_rad: rad,
         sphere_cntr,
+        transform_lcl2world_env,
+        transform_world2lcl_env,
+        tex_shape,
+        tex_data,
         materials,
     };
     Ok((scene, camera))
@@ -29,28 +79,22 @@ fn parse_pbrt_file(file_path: &str) -> anyhow::Result<(MyScene, del_pbrt_cpu::pa
 fn main() -> anyhow::Result<()> {
     let pbrt_file_path = "asset/env_light/scene-v4.pbrt";
     let (scene, camera) = parse_pbrt_file(pbrt_file_path)?;
-    let (tex_shape, tex_data) = {
-        let pfm =
-            del_pbrt_cpu::io_pfm::PFM::read_from("asset/material-testball/textures/envmap.pfm")?;
-        ((pfm.w, pfm.h), pfm.data)
-    };
     {
         use image::Pixel;
-        let img: Vec<image::Rgb<f32>> = tex_data
+        let img: Vec<image::Rgb<f32>> = scene
+            .tex_data
             .chunks(3)
             .map(|rgb| *image::Rgb::<f32>::from_slice(rgb))
             .collect();
         use image::codecs::hdr::HdrEncoder;
         let file = std::fs::File::create("target/04_env_light_pfm.exr").unwrap();
         let enc = HdrEncoder::new(file);
-        let _ = enc.encode(&img, tex_shape.0, tex_shape.1);
+        let _ = enc.encode(&img, scene.tex_shape.0, scene.tex_shape.1);
     }
     // --------------------
     let transform_lcl2world_env = [
         -0.386527, 0., 0.922278, 0., -0.922278, 0., -0.386527, 0., 0., 1., 0., 0., 0., 0., 0., 1.,
     ];
-    let transform_world2lcl_env =
-        del_geo_core::mat4_col_major::try_inverse_with_pivot(&transform_lcl2world_env).unwrap();
     let img_shape = (640, 360);
     {
         // mirror reflection
@@ -77,24 +121,24 @@ fn main() -> anyhow::Result<()> {
                 let refl = vec3::mirror_reflection(&ray_dir, &hit_nrm);
                 let refl = vec3::normalize(&refl);
                 let env = del_geo_core::mat4_col_major::transform_homogeneous(
-                    &transform_world2lcl_env,
+                    &scene.transform_world2lcl_env,
                     &refl,
                 )
                 .unwrap();
                 let tex_coord = del_geo_core::uvec3::map_to_unit2_equal_area(&env);
                 *pix = del_canvas::image_interpolation::nearest::<3>(
                     &[
-                        tex_coord[0] * tex_shape.0 as f32,
-                        (1.0 - tex_coord[1]) * tex_shape.1 as f32,
+                        tex_coord[0] * scene.tex_shape.0 as f32,
+                        (1.0 - tex_coord[1]) * scene.tex_shape.1 as f32,
                     ],
-                    &tex_shape,
-                    &tex_data,
+                    &scene.tex_shape,
+                    &scene.tex_data,
                     false,
                 );
             } else {
                 let nrm = del_geo_core::vec3::normalize(&ray_dir);
                 let env = del_geo_core::mat4_col_major::transform_homogeneous(
-                    &transform_world2lcl_env,
+                    &scene.transform_world2lcl_env,
                     &nrm,
                 )
                 .unwrap();
@@ -102,11 +146,11 @@ fn main() -> anyhow::Result<()> {
                 let tex_coord = del_geo_core::uvec3::map_to_unit2_equal_area(&env);
                 *pix = del_canvas::image_interpolation::nearest::<3>(
                     &[
-                        tex_coord[0] * tex_shape.0 as f32,
-                        (1.0 - tex_coord[1]) * tex_shape.1 as f32,
+                        tex_coord[0] * scene.tex_shape.0 as f32,
+                        (1.0 - tex_coord[1]) * scene.tex_shape.1 as f32,
                     ],
-                    &tex_shape,
-                    &tex_data,
+                    &scene.tex_shape,
+                    &scene.tex_data,
                     false,
                 );
             }
@@ -157,19 +201,18 @@ fn main() -> anyhow::Result<()> {
                     .into();
                     let refl_dir = vec3::normalize(&refl_dir);
                     let env = del_geo_core::mat4_col_major::transform_homogeneous(
-                        &transform_world2lcl_env,
+                        &scene.transform_world2lcl_env,
                         &refl_dir,
                     )
                     .unwrap();
                     let tex_coord = del_geo_core::uvec3::map_to_unit2_equal_area(&env);
-                    let tex_coord = [tex_coord[0], 1.0 - tex_coord[1]];
                     let c = del_canvas::image_interpolation::nearest::<3>(
                         &[
-                            tex_coord[0] * tex_shape.0 as f32,
-                            tex_coord[1] * tex_shape.1 as f32,
+                            tex_coord[0] * scene.tex_shape.0 as f32,
+                            (1.0 - tex_coord[1]) * scene.tex_shape.1 as f32,
                         ],
-                        &tex_shape,
-                        &tex_data,
+                        &scene.tex_shape,
+                        &scene.tex_data,
                         false,
                     );
                     radiance = vec3::add(&radiance, &c);
@@ -179,18 +222,18 @@ fn main() -> anyhow::Result<()> {
             } else {
                 let nrm = del_geo_core::vec3::normalize(&ray_dir);
                 let env = del_geo_core::mat4_col_major::transform_homogeneous(
-                    &transform_world2lcl_env,
+                    &scene.transform_world2lcl_env,
                     &nrm,
                 )
                 .unwrap();
                 let tex_coord = del_geo_core::uvec3::map_to_unit2_equal_area(&env);
                 pix.0 = del_canvas::image_interpolation::nearest::<3>(
                     &[
-                        tex_coord[0] * tex_shape.0 as f32,
-                        (1.0 - tex_coord[1]) * tex_shape.1 as f32,
+                        tex_coord[0] * scene.tex_shape.0 as f32,
+                        (1.0 - tex_coord[1]) * scene.tex_shape.1 as f32,
                     ],
-                    &tex_shape,
-                    &tex_data,
+                    &scene.tex_shape,
+                    &scene.tex_data,
                     false,
                 );
             }
@@ -218,13 +261,13 @@ fn main() -> anyhow::Result<()> {
         use del_pbrt_cpu::env_map::*;
         use image::Pixel;
         let samples = 64;
-        let img: Vec<image::Rgb<f32>> = tex_data
+        let img: Vec<image::Rgb<f32>> = scene
+            .tex_data
             .chunks(3)
             .map(|rgb| *image::Rgb::<f32>::from_slice(rgb))
             .collect();
 
-        let texw = tex_shape.0;
-        let texh = tex_shape.1;
+        let (texw, texh) = scene.tex_shape;
 
         let grayscale = calc_grayscale(&img, texw, texh);
         let itgr = calc_integral_over_grayscale(&grayscale, texw, texh);
@@ -278,7 +321,7 @@ fn main() -> anyhow::Result<()> {
                 let hit_nrm = vec3::sub(&hit_pos, &scene.sphere_cntr);
                 let hit_nrm = vec3::normalize(&hit_nrm);
                 let nrm = del_geo_core::mat4_col_major::transform_homogeneous(
-                    &transform_world2lcl_env,
+                    &scene.transform_world2lcl_env,
                     &hit_nrm,
                 )
                 .unwrap();
@@ -313,19 +356,18 @@ fn main() -> anyhow::Result<()> {
             } else {
                 let nrm = del_geo_core::vec3::normalize(&ray_dir);
                 let env = del_geo_core::mat4_col_major::transform_homogeneous(
-                    &transform_world2lcl_env,
+                    &scene.transform_world2lcl_env,
                     &nrm,
                 )
                 .unwrap();
                 let tex_coord = del_geo_core::uvec3::map_to_unit2_equal_area(&env);
-                let tex_coord = [tex_coord[0], 1.0 - tex_coord[1]];
                 *pix = del_canvas::image_interpolation::nearest::<3>(
                     &[
-                        tex_coord[0] * tex_shape.0 as f32,
-                        tex_coord[1] * tex_shape.1 as f32,
+                        tex_coord[0] * scene.tex_shape.0 as f32,
+                        (1.0 - tex_coord[1]) * scene.tex_shape.1 as f32,
                     ],
-                    &tex_shape,
-                    &tex_data,
+                    &scene.tex_shape,
+                    &scene.tex_data,
                     false,
                 );
             }

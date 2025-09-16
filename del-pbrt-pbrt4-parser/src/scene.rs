@@ -58,6 +58,12 @@ pub struct ShapeEntity {
     pub area_light_index: Option<usize>,
 }
 
+#[derive(Debug)]
+pub struct LightEntity {
+    pub params: Light,
+    pub transform: Mat4,
+}
+
 #[derive(Debug, Clone)]
 pub struct Object {
     pub name: String,
@@ -87,7 +93,7 @@ pub struct Scene {
     pub sampler: Option<Sampler>,
     pub textures: Vec<Texture>,
     pub materials: Vec<Material>,
-    pub lights: Vec<Light>,
+    pub lights: Vec<LightEntity>,
     pub area_lights: Vec<AreaLight>,
     pub mediums: Vec<Medium>,
     pub shapes: Vec<ShapeEntity>,
@@ -378,7 +384,11 @@ impl Scene {
                     // TODO: Handle current_outside_medium
 
                     let light = Light::new(ty, params)?;
-                    scene.lights.push(light);
+                    let light_entity = LightEntity {
+                        params: light,
+                        transform: current_state.transform_matrix,
+                    };
+                    scene.lights.push(light_entity);
                 }
                 // After an AreaLightSource directive, all subsequent shapes emit light
                 // from their surfaces according to the distribution defined by the given
