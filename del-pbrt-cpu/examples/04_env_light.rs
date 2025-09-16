@@ -3,8 +3,8 @@ struct MyScene {
     sphere_cntr: [f32; 3],
     tex_shape: (usize, usize),
     tex_data: Vec<f32>,
-    transform_lcl2world_env: [f32;16],
-    transform_world2lcl_env: [f32;16],
+    transform_lcl2world_env: [f32; 16],
+    transform_world2lcl_env: [f32; 16],
     materials: Vec<del_pbrt_cpu::material::Material>,
 }
 
