@@ -31,13 +31,13 @@ rayon = "1.10.0"
 del-pbrt-pbrt4-parser = {path="del-pbrt-pbrt4-parser"}
 
 # for development
-# del-geo-core = { path = "../del-geo/del-geo-core" }
-# del-msh-core = { path = "../del-msh/del-msh-core" }
+del-geo-core = { path = "../del-geo/del-geo-core" }
+del-msh-cpu = { path = "../del-msh/del-msh-cpu" }
 # del-canvas = {path = "../del-canvas"}
 
 # for git push
-del-geo-core = { git = "https://github.com/nobuyuki83/del-geo.git"}
-del-msh-cpu = { git = "https://github.com/nobuyuki83/del-msh.git" }
+# del-geo-core = { git = "https://github.com/nobuyuki83/del-geo.git"}
+# del-msh-cpu = { git = "https://github.com/nobuyuki83/del-msh.git" }
 del-canvas = {git="https://github.com/nobuyuki83/del-canvas.git"}
 
 # for deploy

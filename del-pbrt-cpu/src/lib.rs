@@ -3,7 +3,6 @@ pub mod bxdf;
 pub mod cam2;
 pub mod cam3;
 pub mod cam_pbrt;
-pub mod env_map;
 pub mod io_pfm;
 pub mod layered_material;
 pub mod material;
